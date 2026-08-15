@@ -73,3 +73,7 @@ Chapters 03, 04, and 05 (required platform services, VCF-native services, secret
 background you'll want *before* chapter 11, but they don't block chapters 08/09 — the worked
 examples in `platform/` and `apps/` will run without them. Chapter 12 is a reference you'll come
 back to whenever something doesn't behave as expected.
+
+[Chapter 14](14-infrastructure-prerequisites.md) sits outside this flow entirely — it's written
+for whoever provisions the vSphere Namespace this whole cookbook assumes already exists (a VI/NSX
+admin), not for the team using chapters 00-13. Read it if that's you, or hand it to whoever it is.
