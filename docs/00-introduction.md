@@ -21,6 +21,20 @@ A few concepts you'll see everywhere in this repo:
 - **Workload / app** — something you deploy either directly into a Supervisor namespace, or into
   a VKS cluster that lives inside one.
 
+A VKS cluster isn't the only thing the Supervisor can provision declaratively — two more
+capabilities worth knowing exist, both consumed directly against the Supervisor namespace (no
+guest cluster involved), and both demonstrated with a worked example under `apps/`:
+
+- **VM Service** — provisions a standalone virtual machine the same way you'd provision anything
+  else in Kubernetes: `kubectl apply` a `VirtualMachine` custom resource, rather than clicking
+  through vCenter. Useful for workloads that aren't (yet) containerized. See `apps/hello-vm/`.
+- **vSphere Pods** — ordinary-looking Pods that run natively on the Supervisor itself (each one
+  its own lightweight VM-isolated sandbox), with no VKS guest cluster underneath them at all. See
+  `apps/hello-vsphere-pod/`.
+
+Concrete guidance on *when* to reach for one of these over a regular VKS-cluster app is still
+being worked out — see [`TODO.md`](../TODO.md).
+
 If none of that means much yet, that's expected — [chapter 06](06-connecting-to-supervisor.md)
 and [chapter 07](07-repo-structure-and-conventions.md) build it up from first principles.
 

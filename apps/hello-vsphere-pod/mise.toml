@@ -1,0 +1,3 @@
+[tools]
+# Not strictly needed here (kustomize/kubectl are pinned at the repo root) — shown for symmetry
+# with apps/hello-vks/mise.toml.

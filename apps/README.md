@@ -9,6 +9,7 @@ for why this folder is component-first, unlike [`../platform/`](../platform/READ
 - [folder structure](#folder-structure)
 - [mise tasks](#mise-tasks)
 - [adding a new app](#adding-a-new-app)
+- [VM Service and vSphere Pods](#vm-service-and-vsphere-pods)
 - [CHANGE_ME placeholders in the example](#change_me-placeholders-in-the-example)
 
 <!-- tocstop -->
@@ -32,7 +33,12 @@ apps/
     whereamI.toml                 # wai — decode the current kube-context
 ```
 
-`hello-vks/` is a fully worked example — copy it as your starting point (see below).
+Three fully worked examples live here, each demonstrating a different way to run something on
+the Supervisor — copy whichever matches what you're building (see below):
+
+- `hello-vks/` — a container, on a VKS guest cluster or directly in a Supervisor namespace
+- `hello-vm/` — a standalone virtual machine, via VM Service
+- `hello-vsphere-pod/` — a container, running natively on the Supervisor as a vSphere Pod
 
 ## mise tasks
 
@@ -69,9 +75,28 @@ before any of the above will work.
 6. To deploy the same app into a second namespace, `cp -r overlays/<namespace> overlays/<other-namespace>`
    and repeat steps 3-5 for the copy.
 
+## VM Service and vSphere Pods
+
+`hello-vm/` and `hello-vsphere-pod/` both deploy directly into the vSphere Namespace itself,
+never onto a VKS guest cluster — see [chapter 00](../docs/00-introduction.md) for what each
+capability is. Two structural differences from `hello-vks/` worth noticing if you're copying
+either as a starting point:
+
+- No `Namespace` resource in `base/` — the target namespace *is* the vSphere Namespace (set via
+  the overlay's `namespace:` field), not an app-specific one you create yourself.
+- Their overlay `mise.toml` sets `VCF_NAMESPACE` only, never `VCF_CLUSTER` — there's no guest
+  cluster in the picture for either of these.
+
+`hello-vsphere-pod/` is otherwise the same restricted-PSS-compliant deployment as `hello-vks/`,
+plus `runtimeClassName: runv` in the pod spec — that field is what actually makes it a vSphere
+Pod. Concrete guidance on when to reach for either of these over a regular `hello-vks`-style app
+is still being worked out — see [`../TODO.md`](../TODO.md).
+
 ## CHANGE_ME placeholders in the example
 
 | Placeholder | Where | Replace with |
 |---|---|---|
-| `example-namespace` (folder + `VCF_NAMESPACE`) | `overlays/example-namespace/mise.toml` | your real vSphere Namespace |
-| `service.beta.kubernetes.io/vsphere-load-balancer-class: "nsx"` | `base/service.yaml` | your Supervisor's actual load-balancer class, if different |
+| `example-namespace` (folder + `VCF_NAMESPACE`) | every `overlays/example-namespace/mise.toml` | your real vSphere Namespace |
+| `service.beta.kubernetes.io/vsphere-load-balancer-class: "nsx"` | `hello-vks/base/service.yaml`, `hello-vsphere-pod/base/service.yaml` | your Supervisor's actual load-balancer class, if different |
+| `CHANGE_ME_VM_CLASS`, `CHANGE_ME_VM_IMAGE`, `CHANGE_ME_STORAGE_CLASS` | `hello-vm/base/vm.yaml` | values from `kubectl get virtualmachineclass` / `virtualmachineimage` / `storageclass` |
+| `CHANGE_ME_SSH_PUBLIC_KEY` | `hello-vm/base/vm.yaml` | your public key, see [`../docs/02-ssh-keys.md`](../docs/02-ssh-keys.md) |

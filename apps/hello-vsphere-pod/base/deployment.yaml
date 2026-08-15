@@ -1,0 +1,71 @@
+# vSphere Pods example — this runs natively on the Supervisor itself (each pod its own
+# lightweight VM-isolated sandbox), with no VKS guest cluster underneath it at all. That's why
+# there's no Namespace resource here, unlike apps/hello-vks/: the target namespace IS the
+# vSphere Namespace, set via the overlay's `namespace:` field, not an app-specific k8s namespace
+# you create yourself — same reasoning as apps/hello-vm/, see that folder's comment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-vsphere-pod
+  namespace: CHANGE_ME_NAMESPACE   # overridden by `namespace:` in the overlay's kustomization.yaml
+  labels:
+    app: hello-vsphere-pod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-vsphere-pod
+  template:
+    metadata:
+      labels:
+        app: hello-vsphere-pod
+    spec:
+      # runtimeClassName: runv is what actually makes this a vSphere Pod rather than a normal
+      # pod — required when deploying straight into a Supervisor namespace (remove it if this
+      # same manifest is ever repointed at a VKS guest cluster's standard nodes instead).
+      runtimeClassName: runv
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: hello-vsphere-pod
+          image: nginxinc/nginx-unprivileged:stable-alpine
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - "ALL"
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: nginx-tmp
+              mountPath: /tmp
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: nginx-tmp
+          emptyDir: {}

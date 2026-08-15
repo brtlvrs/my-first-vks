@@ -1,0 +1,44 @@
+---
+# VM Service example — a VirtualMachine is provisioned directly in the vSphere Namespace itself,
+# not inside a VKS guest cluster (there's no guest cluster involved for a standalone VM at all).
+# That's why there's no separate Namespace resource here, unlike apps/hello-vks/: the target
+# namespace IS the vSphere Namespace, set below via the overlay's `namespace:` field, not an
+# app-specific k8s namespace you create yourself.
+apiVersion: vmoperator.vmware.com/v1alpha5
+kind: VirtualMachine
+metadata:
+  name: hello-vm
+  namespace: CHANGE_ME_NAMESPACE   # overridden by `namespace:` in the overlay's kustomization.yaml
+  labels:
+    app: hello-vm
+spec:
+  className: CHANGE_ME_VM_CLASS        # e.g. best-effort-small — see `kubectl get virtualmachineclass`
+  imageName: CHANGE_ME_VM_IMAGE        # e.g. an ubuntu-*-server-cloudimg-* image — see `kubectl get virtualmachineimage`
+  storageClass: CHANGE_ME_STORAGE_CLASS # see `kubectl get storageclass`
+  powerState: PoweredOn
+  network:
+    interfaces:
+      - name: eth0
+        # CHANGE_ME (maybe) — dhcp4: true is the common case. Some NSX-backed subnets have no
+        # DHCP server at all; if this VM never gets an address, set dhcp4: false instead and
+        # cloud-init will pick up the NSX-assigned SubnetPort IP that vm-operator injects via
+        # GuestInfo. Check `kubectl get virtualmachine hello-vm -o yaml` under `status.network`
+        # either way to see what address it actually got.
+        dhcp4: true
+  bootstrap:
+    cloudInit:
+      cloudConfig:
+        users:
+          - name: hello
+            groups: [sudo]
+            shell: /bin/bash
+            lock_passwd: false
+            # hashed_passwd can only reference a Secret — vm-operator's cloud-init schema has no
+            # field for an inline hash. Create it out-of-band, never commit the hash itself:
+            #   kubectl create secret generic hello-vm-passwd -n <namespace> \
+            #     --from-literal=password="$(openssl passwd -6)"
+            hashed_passwd:
+              name: hello-vm-passwd
+              key: password
+            ssh_authorized_keys:
+              - CHANGE_ME_SSH_PUBLIC_KEY   # see docs/02-ssh-keys.md for generating one
