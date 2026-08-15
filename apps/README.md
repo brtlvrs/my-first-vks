@@ -11,6 +11,7 @@ for why this folder is component-first, unlike [`../platform/`](../platform/READ
 - [mise tasks](#mise-tasks)
 - [adding a new app](#adding-a-new-app)
 - [VM Service and vSphere Pods](#vm-service-and-vsphere-pods)
+  * [when to reach for VM Service](#when-to-reach-for-vm-service)
   * [cloud-init bootstrap](#cloud-init-bootstrap)
   * [where apps get installed](#where-apps-get-installed)
   * [SSH keys](#ssh-keys)
@@ -111,13 +112,34 @@ plus `runtimeClassName: runv` in the pod spec — that field is what actually ma
 Pod. `it-tools/` applies the VKS-vs-vSphere-Pod split to one real app using
 [kustomize components](https://kubectl.docs.kubernetes.io/guides/config_management/components/)
 instead of two separate app folders — see [`it-tools/README.md`](it-tools/README.md), including
-why it can't use the Restricted Pod Security Standard the other examples do. Concrete guidance on
-when to reach for VM Service or vSphere Pods over a regular `hello-vks`-style app is still being
-worked out — see [`../TODO.md`](../TODO.md).
+why it can't use the Restricted Pod Security Standard the other examples do. See
+[below](#when-to-reach-for-vm-service) for VM Service's clearest use case so far — vSphere Pods'
+own is still open, see [`../TODO.md`](../TODO.md).
 
 `hello-vm/` goes further, into a realistic rootless-Podman host with a persistent data disk — see
-[`hello-vm/README.md`](hello-vm/README.md) for the full walkthrough. Four things about it worth
+[`hello-vm/README.md`](hello-vm/README.md) for the full walkthrough. Five things about it worth
 understanding up front:
+
+### when to reach for VM Service
+
+The clearest candidate use case so far: **a third-party vendor whose own support/operating model
+is built around Podman/docker-compose and SSH access, not Kubernetes.** Asking them to
+containerize for K8s compatibility is real work on their end, with no guarantee it happens the way
+you'd want; a VM they can SSH into and manage exactly as they already know how meets them where
+they are, while you still get to provision and govern it declaratively.
+
+That last part is worth being precise about — "declarative" and "secure" get conflated easily. A
+VM defined as a versioned `VirtualMachine` CR is more *reproducible* and *reviewable* than one
+clicked together by hand: you can always redeploy from the same known spec instead of fixing drift
+in place, and the bootstrap went through a PR before it ever ran, instead of a human following (or
+half-following) a checklist. That's a real, useful property — but it is **not** the same claim as
+"more secure." A badly-written `cloudConfig` is exactly as insecure declared as it would be built
+by hand, just consistently so across every VM from that spec. `hello-vm/` itself is proof: it's
+fully declarative, and it also exposes SSH via a LoadBalancer and falls back to password auth (see
+[chapter 02](../docs/02-ssh-keys.md) and [below](#exposing-ports-loadbalancer-components)) — real
+attack-surface choices that being declarative doesn't paper over. The honest framing: declarative
+provisioning makes a VM's security posture *reviewable and consistent* — it's still on you to make
+that posture *good*.
 
 ### cloud-init bootstrap
 
