@@ -40,3 +40,23 @@ fi
 echo "Serving docs/presentation/ at http://localhost:8080 -- edit slides.md and your browser will reload automatically."
 marp --server --watch --html docs/presentation
 """
+
+["docs:present-pdf"]
+description = "Render the docs/presentation/ Marp slide deck to docs/presentation/slides.pdf"
+tools = { node = "lts" }
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Install tool globally if missing (runs only once)
+if ! command -v marp &> /dev/null; then
+  echo "Installing @marp-team/marp-cli..."
+  npm install -g @marp-team/marp-cli
+fi
+
+# marp --pdf needs an actual browser (Chrome/Edge/Firefox) installed and on PATH (or
+# CHROME_PATH set) to render into -- it's not bundled. On a minimal/headless install this is
+# often the missing piece, not marp-cli itself. See docs/README.md#presentation.
+marp --pdf --html docs/presentation/slides.md -o docs/presentation/slides.pdf
+echo "Wrote docs/presentation/slides.pdf"
+"""

@@ -28,5 +28,20 @@ list. Update it by hand when you add, remove, or rename a chapter.
 
 [`presentation/slides.md`](presentation/slides.md) is a short [Marp](https://marp.app/) slide
 deck version of this cookbook — a repo-tour to walk a new team through, rather than something to
-read. `mise run docs:present` serves it as interactive HTML with live reload at
-`http://localhost:8080` (installs `@marp-team/marp-cli` on first run).
+read. Two ways to view it:
+
+- `mise run docs:present` — serves it as interactive HTML with live reload at
+  `http://localhost:8080` (installs `@marp-team/marp-cli` on first run). This binds to **all**
+  network interfaces, not just `localhost` — from another machine on the same network, browse to
+  `http://<this-machine's-LAN-IP-or-hostname>:8080` while the task is still running (it's a
+  foreground process, not a background service). If that doesn't connect, check whether a host
+  firewall is blocking inbound port 8080.
+- `mise run docs:present-pdf` — renders it to `docs/presentation/slides.pdf` (gitignored — a
+  build artifact, not something to commit) for offline viewing or sharing as a file. This needs an
+  actual browser (Chrome, Edge, or Firefox) installed on the machine running it — `marp --pdf`
+  doesn't bundle one. On a minimal/headless Linux install, that's often the missing piece:
+  `npx @puppeteer/browsers install chrome@stable` downloads a portable Chrome, but it also needs
+  a handful of shared libraries (`libatk-1.0.so.0` and similar) that a minimal server image may
+  not have — install your distro's usual headless-Chrome dependency set
+  (e.g. Debian/Ubuntu: `libatk-bridge2.0-0`, `libgtk-3-0`, `libnss3`, `libasound2`) if you hit
+  that.
