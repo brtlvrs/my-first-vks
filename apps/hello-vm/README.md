@@ -11,6 +11,7 @@ this differs structurally from a container-based app.
 - [deploying](#deploying)
 - [what persists across a redeploy, and what doesn't](#what-persists-across-a-redeploy-and-what-doesnt)
 - [running the demo compose stack](#running-the-demo-compose-stack)
+- [reaching it from outside: the loadbalancer components](#reaching-it-from-outside-the-loadbalancer-components)
 - [vm mise tasks](#vm-mise-tasks)
 - [CHANGE_ME placeholders](#change_me-placeholders)
 
@@ -62,9 +63,38 @@ ssh hello@<vm-ip> 'docker-compose -f ~/docker-compose.yaml up -d'
 
 `hello` (the `hello-world` image) is a trivial smoke test — it prints one line and exits,
 confirming Podman/docker-compose actually works. `it-tools` gives you something with a web UI to
-look at — browse to `http://<vm-ip>:8080` once `docker-compose up -d` finishes pulling it. Both
-land under `/home/hello`, so they (and any data volumes they create) survive a redeploy per the
-table above.
+look at — see the next section for how to reach it. Both land under `/home/hello`, so they (and
+any data volumes they create) survive a redeploy per the table above.
+
+## reaching it from outside: the loadbalancer components
+
+`overlays/example-namespace/kustomization.yaml` mixes in two
+[kustomize components](https://kubectl.docs.kubernetes.io/guides/config_management/components/),
+each rendering a `VirtualMachineService` — vm-operator's own `LoadBalancer`-type CRD, **not** a
+plain core `v1.Service` (a VM Service VM isn't a Pod, so a normal Service's endpoint selection
+doesn't apply the same way):
+
+- `../../components/http-loadbalancer/` — exposes the compose stack's `it-tools` UI, port 80 →
+  the VM's 8080.
+- `../../components/ssh-loadbalancer/` — exposes SSH, port 22 → the VM's 22.
+
+They're **separate components on purpose**, not one combined Service — so you can expose the app
+publicly while keeping SSH reachable only from inside the network (or the other way around),
+toggled independently in `overlays/example-namespace/kustomization.yaml`'s `components:` list
+without touching the other. Both are enabled by default here so the worked example is fully
+reachable out of the box; delete either line to turn that one off.
+
+Once deployed:
+
+```
+kubectl get virtualmachineservice -n <namespace>
+```
+
+lists both, each with its own external IP once your Supervisor's load-balancer provider
+(NSX ALB, NSX-LB, or FLB — see [chapter 14](../../docs/14-infrastructure-prerequisites.md))
+assigns one. Browse to `http://<http-loadbalancer-ip>/` for `it-tools`, and
+`ssh hello@<ssh-loadbalancer-ip>` instead of the VM's own `primaryIP4` if you'd rather not depend
+on being on the same network segment as the VM itself.
 
 ## vm mise tasks
 

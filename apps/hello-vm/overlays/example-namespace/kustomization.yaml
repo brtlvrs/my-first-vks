@@ -4,3 +4,6 @@ kind: Kustomization
 namespace: example-namespace
 resources:
   - ../../base
+components:
+  - ../../components/http-loadbalancer
+  - ../../components/ssh-loadbalancer

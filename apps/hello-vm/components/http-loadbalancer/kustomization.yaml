@@ -1,0 +1,6 @@
+# Toggled independently from ../ssh-loadbalancer/ — a VM may need app exposure without SSH
+# exposure, or vice versa. See apps/README.md#exposing-ports-loadbalancer-components.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - service.yaml

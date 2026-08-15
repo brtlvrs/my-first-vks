@@ -1,0 +1,6 @@
+# Toggled independently from ../http-loadbalancer/ — see
+# apps/README.md#exposing-ports-loadbalancer-components for why.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - service.yaml

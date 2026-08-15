@@ -1,0 +1,22 @@
+---
+# External exposure for the demo compose stack's it-tools UI (port 8080 — see
+# ../../compose/docker-compose.yaml) via vm-operator's own VirtualMachineService CRD — NOT a
+# plain core/v1 Service (a VM Service VM isn't a Pod, so a normal Service's endpoint selection
+# doesn't apply the same way). type: LoadBalancer requires a load-balancer provider wired into
+# the target Supervisor — see docs/14-infrastructure-prerequisites.md.
+#
+# Kept as its own component, separate from ssh-loadbalancer/, on purpose — see
+# apps/README.md#exposing-ports-loadbalancer-components for why.
+apiVersion: vmoperator.vmware.com/v1alpha5
+kind: VirtualMachineService
+metadata:
+  name: hello-vm-http
+spec:
+  type: LoadBalancer
+  selector:
+    app: hello-vm
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP

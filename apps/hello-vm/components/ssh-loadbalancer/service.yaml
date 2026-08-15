@@ -1,0 +1,18 @@
+---
+# External SSH exposure via vm-operator's own VirtualMachineService CRD — NOT a plain core/v1
+# Service, see ../http-loadbalancer/service.yaml's comment for why. type: LoadBalancer requires
+# a load-balancer provider wired into the target Supervisor — see
+# docs/14-infrastructure-prerequisites.md.
+apiVersion: vmoperator.vmware.com/v1alpha5
+kind: VirtualMachineService
+metadata:
+  name: hello-vm-ssh
+spec:
+  type: LoadBalancer
+  selector:
+    app: hello-vm
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: 22
+      protocol: TCP
