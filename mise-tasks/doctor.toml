@@ -32,6 +32,7 @@ check_cli k9s      "k9s version --short"
 check_cli jq       "jq --version"
 check_cli yq       "yq --version"
 check_cli kustomize "kustomize version"
+check_cli fzf       "fzf --version"
 
 section "manually installed CLIs"
 if command -v vcf >/dev/null 2>&1; then
@@ -44,13 +45,6 @@ if command -v git >/dev/null 2>&1; then
     ok "git ($(git --version))"
 else
     fail "git not found on PATH"
-fi
-
-section "optional but recommended"
-if command -v fzf >/dev/null 2>&1; then
-    ok "fzf (used for interactive pickers in some tasks, e.g. cluster:delete)"
-else
-    warn "fzf not found — interactive pickers will fall back to plain prompts where supported"
 fi
 
 section "summary"

@@ -22,7 +22,7 @@ examples you can literally copy and rename rather than build from scratch.
 ## layout
 
 ```
-platform/   # cluster lifecycle: provisioning a VKS cluster, enabling Velero backups per namespace
+platform/   # cluster lifecycle: provisioning a VKS cluster per namespace
 apps/       # deploying an application into a namespace / VKS cluster
 docs/       # the cookbook — start at docs/README.md
 mise.toml   # root env vars + pinned CLI versions
@@ -46,8 +46,9 @@ differently on purpose:
 - **`apps/`** is *component-first*: `<app>/base/` + `<app>/overlays/<namespace>/`. An app
   belongs to exactly one namespace at a time, so grouping by app first makes sense.
 - **`platform/`** is *namespace-first*: `<namespace>/<service>/`, overlaying a centralized
-  `platform/bases/<type>/`. A vSphere Supervisor namespace is the real tenancy boundary and
-  typically hosts more than one platform-level service (a cluster, a Velero backup config, ...),
+  `platform/bases/<type>/`. A vSphere Supervisor namespace is the real tenancy boundary and can
+  host more than one platform-level service (a cluster, and — see
+  [`docs/11-backups-with-velero.md`](docs/11-backups-with-velero.md) — optionally Velero backups),
   so grouping by namespace first matches both how Supervisor itself is organized and how you'll
   actually navigate this repo during day-2 operations.
 

@@ -13,6 +13,7 @@ k9s = "latest"
 jq = "latest"
 yq = "latest"
 kustomize = "latest"
+fzf = "latest"   # required — several interactive tasks (e.g. cluster:delete) use it for picking
 
 [tasks."mise:env"]
 description = "Show MISE / VCF related environment variables"

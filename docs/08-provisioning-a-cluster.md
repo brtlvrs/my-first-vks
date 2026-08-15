@@ -69,4 +69,5 @@ Cluster provisioning takes several minutes — control-plane nodes come up first
 `cluster:status` and `cluster:nodes` are safe to re-run as often as you like while you wait.
 
 Once it's ready, continue to [chapter 09](09-deploying-your-first-app.md) to deploy something
-onto it, or [chapter 11](11-backups-with-velero.md) to enable backups for this namespace.
+onto it. Backups (Velero) aren't part of this repo by default — see
+[chapter 11](11-backups-with-velero.md) if that's something you want to add.

@@ -7,7 +7,7 @@ already provides an equivalent directly on your VCF Supervisor — that's what t
 <!-- toc -->
 
 - [what "Supervisor Services" means](#what-supervisor-services-means)
-- [what this repo already assumes is VCF-native](#what-this-repo-already-assumes-is-vcf-native)
+- [a concrete example: Data Protection (Velero)](#a-concrete-example-data-protection-velero)
 - [checking what's available on your Supervisor](#checking-whats-available-on-your-supervisor)
 - [bring-your-own vs. VCF-native: how to decide](#bring-your-own-vs-vcf-native-how-to-decide)
 
@@ -25,14 +25,15 @@ Which services are actually offered, and whether your namespace has access to th
 your VCF edition/licensing and on how the platform team configured the Supervisor — this is not
 something a generic repo like this one can assume for you.
 
-## what this repo already assumes is VCF-native
+## a concrete example: Data Protection (Velero)
 
-You're already using one, whether or not you'd noticed: the `VeleroService` custom resource in
-[`platform/bases/velero/`](../platform/bases/velero/) is how you consume VMware's **Data
-Protection** Supervisor Service — the operator itself runs platform-wide, managed by Broadcom's
-own operator, not something this repo installs. All the `CHANGE_ME_*` placeholders in that CR are
-about *where it backs up to* (an S3-compatible bucket — [chapter 03](03-required-platform-services.md)),
-not about standing up Velero itself.
+VMware's **Data Protection** Supervisor Service is a good example of what "VCF-native" actually
+looks like in practice: it's consumed via a `VeleroService` custom resource, with the operator
+itself running platform-wide, managed by Broadcom, not something you install yourself. This repo
+doesn't provision it by default (see [chapter 11](11-backups-with-velero.md) for why), but if you
+add it, every `CHANGE_ME_*` value on that CR is about *where it backs up to* (an S3-compatible
+bucket — [chapter 03](03-required-platform-services.md)), not about standing up Velero itself —
+that part is already handled for you, platform-wide, the moment the Supervisor Service is enabled.
 
 ## checking what's available on your Supervisor
 
@@ -45,8 +46,7 @@ kubectl api-resources | grep -i vmware
 
 Custom resources under a `*.vmware.com` API group are a strong signal of a Supervisor Service
 being enabled and usable from your namespace — `veleroappoperator.vmware.com` (Data Protection,
-already in use here) is one example; a registry or ingress operator would show up the same way if
-enabled.
+see above) is one example; a registry or ingress operator would show up the same way if enabled.
 
 ## bring-your-own vs. VCF-native: how to decide
 

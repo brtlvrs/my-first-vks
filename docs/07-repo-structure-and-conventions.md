@@ -19,10 +19,11 @@ they're shaped differently:
   app name makes sense because an app belongs to exactly one namespace at a time — "what is
   `hello-vks` and where does it run" is one folder.
 - **`platform/`** is *namespace-first*: `bases/<type>/` (shared, one per service kind) plus
-  `<namespace>/<service>/` overlays. A vSphere Namespace is a real tenancy boundary that
-  typically hosts *multiple* platform-level things at once (a cluster, its Velero config) — so
-  "what's running in this namespace" is the more useful question, and the folder layout answers
-  it directly. This also matches how the production repos this project is based on
+  `<namespace>/<service>/` overlays. A vSphere Namespace is a real tenancy boundary that can host
+  *multiple* platform-level things at once (a cluster, and optionally a Velero backup config — see
+  [chapter 11](11-backups-with-velero.md)) — so "what's running in this namespace" is the more
+  useful question, and the folder layout answers it directly. This also matches how the
+  production repos this project is based on
   (`vks-platform`) are organized in practice.
 
 Neither is "more correct" in general — they're each shaped around the question you'll actually

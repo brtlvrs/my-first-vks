@@ -1,8 +1,11 @@
 # platform
 
-Cluster lifecycle: provisioning VKS clusters and enabling per-namespace Velero backups on the
-Supervisor. See [`../docs/07-repo-structure-and-conventions.md`](../docs/07-repo-structure-and-conventions.md)
+Cluster lifecycle: provisioning VKS clusters on the Supervisor. See
+[`../docs/07-repo-structure-and-conventions.md`](../docs/07-repo-structure-and-conventions.md)
 for why this folder is laid out differently from [`../apps/`](../apps/README.md).
+
+Backups (Velero) aren't included here — see [`../docs/11-backups-with-velero.md`](../docs/11-backups-with-velero.md)
+for why, and what adding it back would look like.
 
 <!-- toc -->
 
@@ -21,19 +24,19 @@ platform/
     vks-cluster/                # default VKS workload cluster definition
       cluster.yaml
       kustomization.yaml
-    velero/                     # default per-namespace backup config
-      veleroservice.yaml
-      kustomization.yaml
   <vSphere Namespace>/          # one folder per Supervisor namespace — services live as siblings
     mise.toml                   # sets VCF_NAMESPACE, inherited by every service overlay below
     <vks-cluster name>/         # overlay: this namespace's cluster instance
       mise.toml                 # sets VCF_CLUSTER
       kustomization.yml
-    velero/                     # overlay: this namespace's Velero backup config (no VCF_CLUSTER needed)
-      kustomization.yml
   mise-tasks/
     cluster.toml                # cluster:render/diff/apply/status/nodes/delete/kubeconfig
 ```
+
+Only one service type ships by default — `vks-cluster/`. The namespace-first shape (`bases/<type>/`
++ `<namespace>/<service>/`) is built to hold more than one, though — see
+[`../docs/11-backups-with-velero.md`](../docs/11-backups-with-velero.md) for Velero as the
+obvious next addition to slot in the same way.
 
 `bases/*/` are never applied directly — every field that matters is a `CHANGE_ME_*` placeholder,
 overridden by an overlay's JSON6902 patch. `example-namespace/` is a fully worked example built
@@ -69,8 +72,6 @@ Also see the root [`mise-tasks/context.toml`](../mise-tasks/context.toml) tasks 
    target vSphere Namespace.
 5. From inside that folder: `mise run cluster:render` to sanity-check the output, then
    `mise run context:supervisor` (or `context:use`, if already logged in) and `mise run cluster:apply`.
-6. Repeat for `<new-namespace>/velero/` if this namespace needs backups — see
-   [`../docs/11-backups-with-velero.md`](../docs/11-backups-with-velero.md).
 
 A version bump, a scale change, or any other spec edit is just a normal patch-value change
 followed by `cluster:diff` then `cluster:apply` — there's no separate "upgrade" task.
@@ -83,4 +84,3 @@ followed by `cluster:diff` then `cluster:apply` — there's no separate "upgrade
 | `example-namespace` (folder + `VCF_NAMESPACE`) | `example-namespace/mise.toml`, both `kustomization.yml` `namespace:` fields | your real vSphere Namespace |
 | `example-cluster` (folder + `VCF_CLUSTER` + patch value) | `vks-cluster/mise.toml`, `vks-cluster/kustomization.yml` | your real cluster name |
 | `example-storage-policy` | `vks-cluster/kustomization.yml` | a storage policy name from `kubectl get storageclass` |
-| `example-bucket`, `us-east-1`, `minio.example.internal:9000` | `velero/kustomization.yml` | your real S3-compatible bucket/region/endpoint — see [`../docs/03-required-platform-services.md`](../docs/03-required-platform-services.md) |

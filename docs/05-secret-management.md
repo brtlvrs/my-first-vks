@@ -1,6 +1,6 @@
 # 05 — secret management
 
-Credentials — S3 keys for Velero, registry pull secrets, app secrets — must never be committed to
+Credentials — VM login passwords, registry pull secrets, app secrets — must never be committed to
 git. This chapter covers the baseline pattern this repo already uses, and two upgrade paths for
 when the baseline stops being enough.
 
@@ -15,15 +15,20 @@ when the baseline stops being enough.
 
 ## baseline: imperative secrets + gitignore
 
-The pattern already in use throughout this repo (see
-[`platform/bases/velero/veleroservice.yaml`](../platform/bases/velero/veleroservice.yaml)'s
-`nosecret: true`): the manifest declares that it *expects* a Secret to already exist, but the
-Secret itself is created imperatively, outside of `kubectl apply -k`, and is never written to a
-YAML file that gets committed:
+The pattern already in use in this repo (see
+[`apps/hello-vm/base/vm.yaml`](../apps/hello-vm/base/vm.yaml)'s `hashed_passwd`): the manifest
+declares that it *expects* a Secret to already exist, but the Secret itself is created
+imperatively, outside of `kubectl apply -k`, and is never written to a YAML file that gets
+committed:
 
 ```
-kubectl create secret generic cloud-credentials -n <namespace> --from-file=cloud=<path-to-credentials-file>
+kubectl create secret generic hello-vm-passwd -n <namespace> --from-literal=password="$(openssl passwd -6)"
 ```
+
+(or `mise run vm:set-password` from the overlay folder — see
+[`apps/hello-vm/README.md`](../apps/hello-vm/README.md)). The same shape applies to anything
+else that needs a pre-existing Secret — a Velero `cloud-credentials` Secret if you add that addon
+(see [chapter 11](11-backups-with-velero.md)), a registry pull secret, an app's own API key.
 
 If you do need to keep a secret manifest around locally (for repeat use, or to hand to a
 teammate), name it `secret.yaml` — this repo's [`.gitignore`](../.gitignore) already excludes

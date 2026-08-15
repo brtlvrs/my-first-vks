@@ -14,7 +14,7 @@ it as a reference and jump straight to the chapter you need.
 - [08 — provisioning a cluster](08-provisioning-a-cluster.md)
 - [09 — deploying your first app](09-deploying-your-first-app.md)
 - [10 — day-2 operations](10-day2-operations.md)
-- [11 — backups with Velero](11-backups-with-velero.md)
+- [11 — backups with Velero (optional addon)](11-backups-with-velero.md)
 - [12 — troubleshooting cookbook](12-troubleshooting-cookbook.md)
 - [13 — next steps](13-next-steps.md)
 - [14 — infrastructure prerequisites](14-infrastructure-prerequisites.md)

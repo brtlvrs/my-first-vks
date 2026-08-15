@@ -20,7 +20,9 @@ if [ -n "$TARGET_FILE" ]; then
   markdown-toc -i "$TARGET_FILE"
 else
   echo "Updating TOC for all .md files..."
-  find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./.git/*" -exec markdown-toc -i {} \\;
+  # docs/presentation/ is excluded: it's a Marp slide deck, not a chapter, and markdown-toc
+  # mangles its YAML frontmatter (e.g. "size: 16:9" was seen turning into "size: 969").
+  find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./.git/*" ! -path "./docs/presentation/*" -exec markdown-toc -i {} \\;
 fi
 """
 

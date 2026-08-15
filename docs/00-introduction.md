@@ -43,8 +43,8 @@ and [chapter 07](07-repo-structure-and-conventions.md) build it up from first pr
 This repo is not tied to any customer or environment — every site-specific value (endpoints,
 IPs, storage policy names, credentials) is a `CHANGE_ME_*` placeholder. It gives you:
 
-- **`platform/`** — a working, worked example of provisioning a VKS cluster and enabling backups
-  for a namespace, using [kustomize](https://kustomize.io/) `base`/`overlay` manifests.
+- **`platform/`** — a working, worked example of provisioning a VKS cluster for a namespace, using
+  [kustomize](https://kustomize.io/) `base`/`overlay` manifests.
 - **`apps/`** — a working, worked example of deploying an application, same pattern.
 - **[`mise`](https://mise.jdx.dev/)** as the single entry point for both pinning CLI versions and
   running the day-to-day commands (`mise run <task>`), so you don't have to memorize long
@@ -64,10 +64,10 @@ IPs, storage policy names, credentials) is a `CHANGE_ME_*` placeholder. It gives
                         └──────────────────────┬──────────────────────────────┘
                                                 ▼
                                     10 day-2 operations
-                                                │
-                                                ▼
-                                    11 backups with Velero
 ```
+
+Chapter 11 (backups with Velero) sits outside this chain — it's an optional addon this repo
+doesn't provision by default, not a required next step. See its own chapter for why.
 
 Chapters 03, 04, and 05 (required platform services, VCF-native services, secret management) are
 background you'll want *before* chapter 11, but they don't block chapters 08/09 — the worked

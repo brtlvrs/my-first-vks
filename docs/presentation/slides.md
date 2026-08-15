@@ -4,7 +4,6 @@ theme: default
 paginate: true
 size: 16:9
 ---
-
 # my-first-vks
 
 A customer-agnostic starting point for VKS on a VCF 9.1 Supervisor
@@ -34,7 +33,7 @@ Built for teams new to `kubectl` and VKS — a stepping stone, not a finished pr
 ## Repo layout
 
 ```
-platform/   cluster lifecycle — provisioning VKS clusters, enabling Velero backups
+platform/   cluster lifecycle — provisioning VKS clusters per namespace
 apps/       deploying things — containers, VMs, vSphere Pods
 docs/       this cookbook — start at docs/README.md
 mise.toml   root env vars + pinned CLI versions
@@ -69,7 +68,7 @@ Same kustomize `base`/`overlay` idea, different question each answers first
 
 00 introduction · 01 workstation · 02 SSH keys · 03 platform services · 04 VCF-native services
 05 secrets · 06 connect to Supervisor · 07 repo conventions · 08 provision a cluster
-09 deploy your first app · 10 day-2 ops · 11 Velero backups · 12 troubleshooting
+09 deploy your first app · 10 day-2 ops · 11 Velero backups (optional addon) · 12 troubleshooting
 13 next steps · 14 infrastructure prerequisites (for your VI/NSX admin)
 
 Read 00→12 in order the first time; 13/14 are reference, not sequential
@@ -80,7 +79,7 @@ Read 00→12 in order the first time; 13/14 are reference, not sequential
 
 | Example | Demonstrates |
 |---|---|
-| `platform/example-namespace/` | provisioning a VKS cluster + Velero backups |
+| `platform/example-namespace/` | provisioning a VKS cluster |
 | `apps/hello-vks/` | a container, restricted-PSS-compliant |
 | `apps/hello-vsphere-pod/` | the same container, as a native vSphere Pod |
 | `apps/hello-vm/` | VM Service, with a persistent data disk across redeploys |
@@ -113,3 +112,4 @@ Each copied folder's own README lists exactly which `CHANGE_ME_*` values to fill
 # Questions?
 
 `docs/README.md` is the front door — start there.
+

@@ -12,7 +12,7 @@ Supervisor Services catalog may already provide some of them.
 <!-- toc -->
 
 - [capability 1: a git remote](#capability-1-a-git-remote)
-- [capability 2: S3-compatible object storage](#capability-2-s3-compatible-object-storage)
+- [capability 2: S3-compatible object storage (only if you add the Velero addon)](#capability-2-s3-compatible-object-storage-only-if-you-add-the-velero-addon)
 - [capability 3: a container registry (optional)](#capability-3-a-container-registry-optional)
 - [worked example: Gitea](#worked-example-gitea)
 - [worked example: MinIO](#worked-example-minio)
@@ -30,17 +30,16 @@ mise-specific — this is a plain git repo.
 **Options:** GitHub, GitLab, a company-run Gitea/Forgejo instance, Bitbucket — anything that
 speaks git. See [chapter 02](02-ssh-keys.md) for authenticating to it.
 
-## capability 2: S3-compatible object storage
+## capability 2: S3-compatible object storage (only if you add the Velero addon)
 
-**What it's for:** Velero (the backup mechanism used in [`platform/bases/velero/`](../platform/bases/velero/))
-needs an S3-compatible bucket to store backup data.
+**What it's for:** Velero needs an S3-compatible bucket to store backup data. This repo doesn't
+provision Velero by default — see [chapter 11](11-backups-with-velero.md) — so skip this
+capability entirely unless you're adding that addon.
 
-**What this repo needs from it:** a bucket, a region, an S3 API endpoint URL, and an access
-key/secret key pair. These map directly onto the `CHANGE_ME_*` values in
-[`platform/bases/velero/veleroservice.yaml`](../platform/bases/velero/veleroservice.yaml) and
-each namespace overlay's `kustomization.yml` patch (`spec.bucket`, `spec.backuplocationconfig`),
-plus a `cloud-credentials` Secret — see [chapter 11](11-backups-with-velero.md) for the full
-walkthrough. It does **not** have to be real AWS S3 — the Velero AWS plugin works against any
+**What Velero would need from it:** a bucket, a region, an S3 API endpoint URL, and an access
+key/secret key pair, wired into a `VeleroService` CR's `spec.bucket`/`spec.backuplocationconfig`
+plus a `cloud-credentials` Secret — see [chapter 11](11-backups-with-velero.md) for the shape this
+takes. It does **not** have to be real AWS S3 — Velero's AWS plugin works against any
 S3-compatible API, which is exactly what makes a self-hosted option like MinIO viable.
 
 ## capability 3: a container registry (optional)
@@ -74,9 +73,9 @@ git clone ssh://git@<your-gitea-host>:2222/<org>/<repo>.git
 
 ## worked example: MinIO
 
-[MinIO](https://min.io/) is a self-hostable, S3-API-compatible object store — a reasonable
-default for the Velero bucket if you don't already have on-prem S3-compatible storage. Minimal
-self-hosted setup:
+Only relevant if you're adding the Velero addon (see above). [MinIO](https://min.io/) is a
+self-hostable, S3-API-compatible object store — a reasonable default if you don't already have
+on-prem S3-compatible storage. Minimal self-hosted setup:
 
 ```
 docker run -d --name minio -p 9000:9000 -p 9001:9001 \
@@ -93,8 +92,5 @@ mc alias set local http://localhost:9000 CHANGE_ME_ACCESS_KEY CHANGE_ME_SECRET_K
 mc mb local/CHANGE_ME_BUCKET
 ```
 
-The resulting values map directly onto the placeholders in
-[`platform/example-namespace/velero/kustomization.yml`](../platform/example-namespace/velero/kustomization.yml):
-`spec.bucket` = your bucket name, `s3Url` = your MinIO endpoint, `region` = any string MinIO
-accepts (it doesn't enforce real AWS regions) — see [chapter 11](11-backups-with-velero.md) for
-turning the access/secret key pair into the `cloud-credentials` Secret Velero expects.
+See [chapter 11](11-backups-with-velero.md) for how these values (bucket name, endpoint, region,
+and the access/secret key pair as a `cloud-credentials` Secret) map onto a `VeleroService` CR.
