@@ -1,4 +1,5 @@
 # Per-user/per-customer overrides — never commit real endpoints/credentials
+.claude
 .mise.local.toml
 .config/
 .old
