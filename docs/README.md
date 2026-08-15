@@ -16,6 +16,7 @@ it as a reference and jump straight to the chapter you need.
 - [10 — day-2 operations](10-day2-operations.md)
 - [11 — backups with Velero](11-backups-with-velero.md)
 - [12 — troubleshooting cookbook](12-troubleshooting-cookbook.md)
+- [13 — next steps](13-next-steps.md)
 
 This is a hand-maintained index, not an auto-generated one — `mise run docs:toc` (see
 [`mise-tasks/docs.toml`](../mise-tasks/docs.toml)) builds each *chapter's own* in-page table of
