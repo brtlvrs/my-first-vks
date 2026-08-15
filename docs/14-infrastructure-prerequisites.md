@@ -8,7 +8,7 @@ this as the list of things to request from whoever it is, not something to do yo
 
 <!-- toc -->
 
-- [networking: two ways to get there](#networking-two-ways-to-get-there)
+- [networking: three ways to get there](#networking-three-ways-to-get-there)
 - [vmClasses](#vmclasses)
 - [content libraries](#content-libraries)
 - [RBAC: getting your team access to a namespace](#rbac-getting-your-team-access-to-a-namespace)
@@ -17,12 +17,13 @@ this as the list of things to request from whoever it is, not something to do yo
 
 <!-- tocstop -->
 
-## networking: two ways to get there
+## networking: three ways to get there
 
-A vSphere Namespace (and the VPC it sits on) needs network connectivity underneath it before it
-can exist. As of VCF 9.1 there are two architecturally different ways to provide that — which one
-your Supervisor uses isn't something this repo can decide for you (it's an NSX/VI design choice,
-made once for the whole Supervisor, not per-namespace), but it's worth knowing both exist:
+A vSphere Namespace needs network connectivity — and specifically a load balancer, for the
+Supervisor API and for any `type: LoadBalancer` Service your apps create — underneath it before it
+can exist. As of VCF 9.1 there are three architecturally different ways to provide that. Which one
+your Supervisor uses isn't something this repo can decide for you (it's a VI design choice, made
+once for the whole Supervisor, not per-namespace), but it's worth knowing all three exist:
 
 - **NSX overlay-backed (the traditional model).** A full NSX topology — Edge cluster, Tier-0/
   Tier-1 gateways, Geneve overlay tunnels between hosts. More capable and flexible (dynamic
@@ -32,15 +33,21 @@ made once for the whole Supervisor, not per-namespace), but it's worth knowing b
   cluster entirely; per Broadcom's own description, it needs "only a VLAN and a routed network."
   The VNA cluster (a small HA appliance, minimum 2 nodes) is what makes this possible — a purely
   distributed architecture can't provide *stateful* services (NAT, layer-7 load balancing) on its
-  own, so the VNA cluster exists specifically to host those, working alongside the DTGW. The
-  result is meaningfully less networking complexity to stand up and reason about than the
-  overlay-backed model, at the cost of being newer and less battle-tested.
+  own, so the VNA cluster exists specifically to host those, working alongside the DTGW. Still
+  NSX underneath, just less of it to stand up than the overlay-backed model.
+- **Foundation Load Balancer (FLB) — no NSX at all.** A native, lightweight Layer-4 load balancer
+  that ships built into VVF/VCF at no extra license cost, running on plain **vSphere Distributed
+  Switch (VDS)** networking. vCenter's own Lifecycle Manager deploys and manages it automatically
+  as part of Supervisor activation — as a single VM for a resource-constrained/homelab-style
+  environment, or an HA pair for production. **This is the practical option if you're running VCF
+  9.1 on a standalone vCenter in a homelab and don't want to stand up NSX at all** — it needs
+  nothing beyond a VDS and a routable IP range for the load balancer itself.
 
 Nothing in `apps/` or `platform/` cares which model backs your namespace — the manifests are
 identical either way. This is purely a Supervisor-level setup decision, made before any namespace
 exists.
 
-**If your Supervisor uses the VLAN-backed path**, the prerequisites your VI/NSX admin needs in
+**If your Supervisor uses the VLAN-backed NSX path**, the prerequisites your VI/NSX admin needs in
 place are, at a minimum:
 
 - A physical VLAN with routing capability, for the external connection.
@@ -50,8 +57,13 @@ place are, at a minimum:
 - The **VNA cluster** itself, deployed with at least 2 nodes for HA, selected when the DTGW is
   created.
 
+**If your Supervisor uses FLB instead**, the prerequisites are simpler — a VDS-networked
+Supervisor (no NSX Segment/VPC required) and a routable IP range for the load balancer to hand out
+VIPs from. It's enabled during Supervisor activation (or added afterward to an existing
+"Simplified Supervisor"), not something applied per-namespace.
+
 This is evolving, VCF-9.1-specific material — see [further reading](#further-reading) below
-rather than treating this chapter as the authority on NSX design.
+rather than treating this chapter as the authority on NSX/load-balancer design.
 
 ## vmClasses
 
@@ -105,8 +117,9 @@ Namespaces → `<namespace>` → Permissions → Add**, select the group, and as
 
 A minimal, copy-pasteable version of everything above:
 
-- [ ] Decide NSX overlay-backed vs. VLAN-backed (DTGW + VNA) networking for the Supervisor (once, not per-namespace)
-- [ ] If VLAN-backed: physical VLAN + routing, External IP Block, VNA cluster (2+ nodes)
+- [ ] Decide networking for the Supervisor, once, not per-namespace: NSX overlay-backed, NSX VLAN-backed (DTGW + VNA), or Foundation Load Balancer (no NSX — the homelab/standalone-vCenter option)
+- [ ] If NSX VLAN-backed: physical VLAN + routing, External IP Block, VNA cluster (2+ nodes)
+- [ ] If FLB: VDS networking + a routable IP range for VIPs — no NSX Segment/VPC needed
 - [ ] At least one `VirtualMachineClass` available to the target namespace (`kubectl get virtualmachineclass`)
 - [ ] A Content Library synced with at least one usable VM image (`kubectl get virtualmachineimage`)
 - [ ] A vSphere Namespace created, with a resource quota and storage policy assigned
@@ -114,9 +127,13 @@ A minimal, copy-pasteable version of everything above:
 
 ## further reading
 
-This is new (VCF 9.1) and evolving material — these are third-party technical deep-dives plus one
-official source, not something verified end-to-end against a live environment by this repo:
+This is new (VCF 9.1) and evolving material — a mix of third-party technical deep-dives and
+official Broadcom sources, not something verified end-to-end against a live environment by this
+repo:
 
 - [VMware Cloud Foundation Blog — Simplify Workload Connectivity and Enhance Network Scale and Performance with VCF 9.1](https://blogs.vmware.com/cloud-foundation/2026/05/05/simplify-workload-connectivity-and-enhance-network-scale-and-performance-with-vcf-9-1/) (official)
 - [sdn-warrior.org — VCF 9.1: VNA and VPCs](https://sdn-warrior.org/posts/vcf9.1-vna-vpc/)
 - [Puneet Sharma — VCF 9.1 NSX Technical Deep Dive: DTGW and VNA Clusters](https://puneetsharma.blog/2026/05/18/vcf-9-1-nsx-technical-deep-dive-implementing-distributed-transit-gateways-dtgw-and-vna-clusters/)
+- [VMware Cloud Foundation Blog — Choosing the Right Load Balancer for vSphere Supervisor in vSphere 9.0+ and VCF 9.0+](https://blogs.vmware.com/cloud-foundation/2026/07/13/choosing-the-right-load-balancer-for-vsphere-supervisor-in-vsphere-9-0-and-vmware-cloud-foundation-9-0/) (official — compares FLB, NSX-LB, and Avi)
+- [Broadcom Knowledge Base — vSphere Foundation Load Balancer (FLB): Architecture, Network Requirements, and FAQ](https://knowledge.broadcom.com/external/article/438769/vsphere-foundation-load-balancer-flb-arc.html) (official)
+- [Broadcom TechDocs — Deploying vSphere Supervisor with Foundation Load Balancer](https://techdocs.broadcom.com/us/en/vmware-cis/vcf/vcf-9-0-and-later/9-0/vsphere-supervisor-installation-and-configuration/deploying-vsphere-supervisor-with-foundation-load-balancer.html) (official)
