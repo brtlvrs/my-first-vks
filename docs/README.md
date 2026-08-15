@@ -23,3 +23,10 @@ This is a hand-maintained index, not an auto-generated one — `mise run docs:to
 [`mise-tasks/docs.toml`](../mise-tasks/docs.toml)) builds each *chapter's own* in-page table of
 contents from its headings, but has no way to know about other files, so it can't maintain this
 list. Update it by hand when you add, remove, or rename a chapter.
+
+## presentation
+
+[`presentation/slides.md`](presentation/slides.md) is a short [Marp](https://marp.app/) slide
+deck version of this cookbook — a repo-tour to walk a new team through, rather than something to
+read. `mise run docs:present` serves it as interactive HTML with live reload at
+`http://localhost:8080` (installs `@marp-team/marp-cli` on first run).

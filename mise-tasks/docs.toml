@@ -23,3 +23,20 @@ else
   find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./.git/*" -exec markdown-toc -i {} \\;
 fi
 """
+
+["docs:present"]
+description = "Serve the docs/presentation/ Marp slide deck as interactive HTML, with live reload, at http://localhost:8080"
+tools = { node = "lts" }
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Install tool globally if missing (runs only once)
+if ! command -v marp &> /dev/null; then
+  echo "Installing @marp-team/marp-cli..."
+  npm install -g @marp-team/marp-cli
+fi
+
+echo "Serving docs/presentation/ at http://localhost:8080 -- edit slides.md and your browser will reload automatically."
+marp --server --watch --html docs/presentation
+"""
