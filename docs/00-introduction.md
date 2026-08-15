@@ -77,3 +77,6 @@ back to whenever something doesn't behave as expected.
 [Chapter 14](14-infrastructure-prerequisites.md) sits outside this flow entirely — it's written
 for whoever provisions the vSphere Namespace this whole cookbook assumes already exists (a VI/NSX
 admin), not for the team using chapters 00-13. Read it if that's you, or hand it to whoever it is.
+
+[Chapter 15](15-further-reading.md) is a plain reference list — external links for the topics
+this cookbook touches on, not something to read start to finish.

@@ -18,6 +18,7 @@ it as a reference and jump straight to the chapter you need.
 - [12 — troubleshooting cookbook](12-troubleshooting-cookbook.md)
 - [13 — next steps](13-next-steps.md)
 - [14 — infrastructure prerequisites](14-infrastructure-prerequisites.md)
+- [15 — further reading](15-further-reading.md)
 
 This is a hand-maintained index, not an auto-generated one — `mise run docs:toc` (see
 [`mise-tasks/docs.toml`](../mise-tasks/docs.toml)) builds each *chapter's own* in-page table of

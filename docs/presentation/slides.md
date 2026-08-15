@@ -64,14 +64,14 @@ Same kustomize `base`/`overlay` idea, different question each answers first
 
 ---
 
-## The cookbook: 15 chapters
+## The cookbook: 16 chapters
 
 00 introduction · 01 workstation · 02 SSH keys · 03 platform services · 04 VCF-native services
 05 secrets · 06 connect to Supervisor · 07 repo conventions · 08 provision a cluster
 09 deploy your first app · 10 day-2 ops · 11 Velero backups (optional addon) · 12 troubleshooting
-13 next steps · 14 infrastructure prerequisites (for your VI/NSX admin)
+13 next steps · 14 infrastructure prerequisites (for your VI/NSX admin) · 15 further reading
 
-Read 00→12 in order the first time; 13/14 are reference, not sequential
+Read 00→12 in order the first time; 13/14/15 are reference, not sequential
 
 ---
 
