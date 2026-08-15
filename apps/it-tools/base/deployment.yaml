@@ -1,0 +1,65 @@
+# it-tools (https://github.com/CorentinTh/it-tools) — a real public app, unlike the synthetic
+# nginx-unprivileged example in apps/hello-vks/. Deliberately kept here to make a point: this
+# image is built FROM nginx:stable-alpine with no USER directive (runs as root) and a hardcoded
+# `listen 80` with no env var to change it — it CANNOT satisfy the Restricted Pod Security
+# Standard's runAsNonRoot requirement without a custom nginx.conf. Rather than force
+# runAsNonRoot: true here (which would crash-loop on a permission-denied port-80 bind — that's
+# what the manifest this was ported from actually did), this namespace enforces the *baseline*
+# PSS instead of *restricted* (see components/namespace/namespace.yaml) and the container keeps
+# only the one capability it genuinely needs to run as root safely: NET_BIND_SERVICE, nothing
+# else. Compare against apps/hello-vks/ for what changes when an image IS built rootless.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: it-tools
+  namespace: CHANGE_ME_NAMESPACE   # overridden by `namespace:` in the overlay's kustomization.yaml
+  labels:
+    app: it-tools
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: it-tools
+  template:
+    metadata:
+      labels:
+        app: it-tools
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: it-tools
+          image: corentinth/it-tools:latest
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - "ALL"
+              add:
+                - "NET_BIND_SERVICE"   # the one thing root actually needs here: bind port <1024
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: nginx-tmp
+              mountPath: /tmp
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: nginx-tmp
+          emptyDir: {}

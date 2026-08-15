@@ -1,0 +1,5 @@
+[env]
+# No VCF_CLUSTER here on purpose — a vSphere Pod runs directly on the Supervisor, never "inside"
+# a VKS guest cluster (same reasoning as apps/hello-vsphere-pod/). Rename this folder (and this
+# value) to match your real vSphere Namespace.
+VCF_NAMESPACE = "example-namespace"

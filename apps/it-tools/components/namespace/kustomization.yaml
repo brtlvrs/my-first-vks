@@ -1,0 +1,8 @@
+# Used by overlays/example-namespace-vks/ only — a VKS guest cluster lets you create your own
+# app-specific Kubernetes namespace, so this component adds one. The vSphere-Pods variant
+# (overlays/example-namespace-vpod/) deploys directly into the vSphere Namespace instead and does
+# NOT use this component — see apps/README.md#vm-service-and-vsphere-pods for why.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - namespace.yaml

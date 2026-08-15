@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: it-tools
+  labels:
+    # baseline, not restricted — see base/deployment.yaml's comment for why this app needs it.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest

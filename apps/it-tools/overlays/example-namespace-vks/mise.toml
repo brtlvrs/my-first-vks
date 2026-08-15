@@ -1,0 +1,5 @@
+[env]
+# The VKS guest cluster variant — set both. Rename this folder (and these values) to match your
+# real vSphere Namespace / cluster.
+VCF_NAMESPACE = "example-namespace"
+VCF_CLUSTER = "example-cluster"

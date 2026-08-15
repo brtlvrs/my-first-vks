@@ -1,0 +1,15 @@
+# Used by overlays/example-namespace-vpod/ only — adds runtimeClassName: runv, the field that
+# actually makes this a vSphere Pod (see apps/hello-vsphere-pod/base/deployment.yaml for the same
+# pattern applied directly rather than via a component). NOT used by
+# overlays/example-namespace-vks/ — a regular VKS guest cluster has no `runv` RuntimeClass
+# registered, so setting this there would fail scheduling outright, not just be redundant.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      kind: Deployment
+      name: it-tools
+    patch: |-
+      - op: add
+        path: /spec/template/spec/runtimeClassName
+        value: runv

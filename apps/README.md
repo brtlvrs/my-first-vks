@@ -34,12 +34,15 @@ apps/
     whereamI.toml                 # wai — decode the current kube-context
 ```
 
-Three fully worked examples live here, each demonstrating a different way to run something on
+Four fully worked examples live here, each demonstrating a different way to run something on
 the Supervisor — copy whichever matches what you're building (see below):
 
 - `hello-vks/` — a container, on a VKS guest cluster or directly in a Supervisor namespace
 - `hello-vm/` — a standalone virtual machine, via VM Service
 - `hello-vsphere-pod/` — a container, running natively on the Supervisor as a vSphere Pod
+- `it-tools/` — a real public app (not a synthetic hello-world), deployed both ways at once —
+  one shared `base/`, two overlays (VKS guest cluster and vSphere Pod), see
+  [`it-tools/README.md`](it-tools/README.md)
 
 ## mise tasks
 
@@ -95,8 +98,12 @@ either as a starting point:
 plus `runtimeClassName: runv` in the pod spec — that field is what actually makes it a vSphere
 Pod. `hello-vm/` goes further, into a realistic rootless-Podman host with a persistent data disk
 — see [`hello-vm/README.md`](hello-vm/README.md) for its deploy steps, what survives a redeploy,
-and its own `vm:*` mise tasks. Concrete guidance on when to reach for either of these over a
-regular `hello-vks`-style app is still being worked out — see [`../TODO.md`](../TODO.md).
+and its own `vm:*` mise tasks. `it-tools/` applies the VKS-vs-vSphere-Pod split to one real app
+using [kustomize components](https://kubectl.docs.kubernetes.io/guides/config_management/components/)
+instead of two separate app folders — see [`it-tools/README.md`](it-tools/README.md), including
+why it can't use the Restricted Pod Security Standard the other examples do. Concrete guidance on
+when to reach for VM Service or vSphere Pods over a regular `hello-vks`-style app is still being
+worked out — see [`../TODO.md`](../TODO.md).
 
 ## CHANGE_ME placeholders in the example
 
