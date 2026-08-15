@@ -14,6 +14,7 @@ a passphrase on every single `git push`.
   * [Linux](#linux)
   * [Windows](#windows)
 - [add the public key to your git server](#add-the-public-key-to-your-git-server)
+- [optional extra hardening](#optional-extra-hardening)
 
 <!-- tocstop -->
 
@@ -106,3 +107,20 @@ reboots and works the same from PowerShell, Git Bash, or any other terminal.
 `cat ~/.ssh/id_ed25519.pub` and paste the output into your git server's SSH-keys settings page.
 The exact location varies by server — see [chapter 03](03-required-platform-services.md) for the
 Gitea example. Never paste the *private* key (`id_ed25519`, no `.pub` suffix) anywhere.
+
+## optional extra hardening
+
+- **Auto-expire the unlocked key** — `ssh-add -t 3600 ~/.ssh/id_ed25519` unlocks it for 1 hour
+  instead of the whole login session, so a stolen unlocked laptop is a smaller window of exposure.
+  Works on macOS/Linux; **Windows' built-in OpenSSH `ssh-agent` does not support `-t`**, so this
+  one's platform-limited.
+- **Prefer `ProxyJump` over agent forwarding** if you ever need to hop through a bastion/jump host
+  to reach something else (e.g. an `apps/hello-vm/` VM that's only reachable from inside the
+  network) — agent forwarding exposes your unlocked key to whatever you forward it to, whereas
+  `ProxyJump` (`ssh -J bastion target`, or a `ProxyJump` line in `~/.ssh/config`) just relays the
+  connection through the bastion without ever handing it your key.
+- **Delete keys you've stopped using** — from disk and from `ssh-add -l`'s list. A key that's
+  gone can't be used, forwarded, or leaked; one that's still lying around a year later can.
+
+Sources: [goteleport.com — 5 SSH Agent Best Practices](https://goteleport.com/blog/how-to-use-ssh-agent-safely/),
+[smallstep.com — SSH Agent Explained](https://smallstep.com/blog/ssh-agent-explained/).
