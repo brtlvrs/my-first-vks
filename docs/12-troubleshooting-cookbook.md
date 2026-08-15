@@ -48,14 +48,18 @@ else).
 
 ## app pod stuck Pending or refused by admission
 
-If the namespace enforces the Restricted Pod Security Standard (every namespace this repo
-provisions does, by default — see `pod-security.kubernetes.io/enforce: restricted` in
-`apps/hello-vks/base/namespace.yaml`), a container that runs as root, doesn't drop all
-capabilities, or doesn't set `seccompProfile` will be rejected outright, not just warned about.
-`kubectl describe pod <pod> -n <namespace>` or `kubectl get events -n <namespace>` will show an
-admission-webhook denial message naming the exact field. Compare your container's
-`securityContext` against the one in `apps/hello-vks/base/deployment.yaml`, which is written to
-pass this from a public, non-root-friendly image.
+If the namespace enforces the Restricted Pod Security Standard (`apps/hello-vks/`,
+`hello-vsphere-pod/`, and `it-tools/`'s VKS overlay do; `it-tools/` itself runs at Baseline, see
+[chapter 10](10-day2-operations.md#pod-security-standards-understanding-admission)), a container
+that runs as root, doesn't drop all capabilities, or doesn't set `seccompProfile` gets **rejected
+outright at `kubectl apply` time**, not scheduled-then-crash-looping — that's the tell: no pod
+ever gets created at all. `kubectl describe pod <pod> -n <namespace>` or
+`kubectl get events -n <namespace>` shows an admission-webhook denial message naming the exact
+field that failed. See [chapter 10](10-day2-operations.md#pod-security-standards-understanding-admission)
+for what each PSS level actually requires and why `it-tools/` deliberately runs at Baseline
+instead of Restricted — compare your own container's `securityContext` against whichever of
+`apps/hello-vks/base/deployment.yaml` (Restricted-compliant) or `apps/it-tools/base/deployment.yaml`
+(Baseline, root + one narrow capability) is the closer match for what your image actually needs.
 
 ## copied an overlay folder and things target the wrong namespace
 

@@ -5,6 +5,7 @@ Everyday operational tasks once a cluster and its apps are up.
 <!-- toc -->
 
 - [status and node health](#status-and-node-health)
+- [Pod Security Standards: understanding admission](#pod-security-standards-understanding-admission)
 - [fetching a kubeconfig](#fetching-a-kubeconfig)
 - [scaling a cluster](#scaling-a-cluster)
 - [upgrading a cluster's Kubernetes version](#upgrading-a-clusters-kubernetes-version)
@@ -29,6 +30,57 @@ check across every namespace:
 ```
 mise run cluster:pods-not-running
 ```
+
+## Pod Security Standards: understanding admission
+
+Every namespace `apps/` deploys into has a **Pod Security Standard** enforced on it — a
+Kubernetes-native admission check (built into the API server since 1.25, nothing extra to
+install) that rejects a pod outright at `kubectl apply` time if it doesn't comply, before it's
+even scheduled. Worth understanding on day 2, because it's a common source of "why won't this
+even create" confusion that looks different from every other kind of failure — see
+[chapter 12](12-troubleshooting-cookbook.md#app-pod-stuck-pending-or-refused-by-admission) for how
+to recognize it when it happens.
+
+It's turned on per-namespace with a label — you've already seen it in every app's `base/`:
+
+```yaml
+pod-security.kubernetes.io/enforce: restricted   # or baseline, or privileged
+pod-security.kubernetes.io/enforce-version: latest
+```
+
+Three levels, each stricter than the last:
+
+- **Privileged** — no restrictions at all.
+- **Baseline** — blocks the obviously dangerous stuff: privileged containers, host
+  networking/PID/IPC, most `hostPath` mounts, capability *additions* beyond a small allowlist.
+  Does **not** require running as non-root or dropping capabilities.
+- **Restricted** — everything Baseline blocks, plus it *requires*, at pod or container level:
+  - `runAsNonRoot: true`
+  - `allowPrivilegeEscalation: false`
+  - `seccompProfile.type: RuntimeDefault` (or `Localhost`)
+  - capabilities: must `drop: ["ALL"]`, and may only add back `NET_BIND_SERVICE`
+
+Two worked examples in this repo show both ends of this:
+
+- `apps/hello-vks/` (and `hello-vsphere-pod/`) use `nginxinc/nginx-unprivileged` specifically
+  because it satisfies all four Restricted rules cleanly — it's built to run as UID 1000 on port
+  8080, so `runAsNonRoot: true` costs nothing.
+- `apps/it-tools/` is the more instructive case: its container securityContext is
+  `drop: ["ALL"], add: ["NET_BIND_SERVICE"]` with `seccompProfile: RuntimeDefault` and
+  `allowPrivilegeEscalation: false` — three of the four Restricted rules, already satisfied. The
+  **only** one it fails is `runAsNonRoot: true`, because the stock `corentinth/it-tools` image
+  (`FROM nginx:stable-alpine`, no `USER` directive) needs to start as root to bind port 80 — no
+  securityContext trick fixes that without a custom `nginx.conf`. So `it-tools`'s namespace runs
+  at **Baseline** instead (see `apps/it-tools/components/namespace/namespace.yaml`) — not because
+  the container is loosely secured, but because one specific, non-negotiable rule collides with
+  how that particular public image happens to be built. See
+  [`apps/it-tools/README.md`](../apps/it-tools/README.md#why-this-app-doesnt-use-the-restricted-pod-security-standard)
+  for the full reasoning.
+
+The practical takeaway: when you deploy your own app, check what its image actually needs (does
+it run as root? does it bind a port below 1024?) before picking Restricted by default — and if it
+can't meet all four rules, Baseline plus narrowing capabilities down to exactly what's needed
+(same pattern as `it-tools`) is a reasonable middle ground, not a security failure.
 
 ## fetching a kubeconfig
 
