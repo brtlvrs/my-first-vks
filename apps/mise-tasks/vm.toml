@@ -1,0 +1,164 @@
+# VM lifecycle tasks for VM Service apps (e.g. apps/hello-vm/) — run from inside the specific
+# overlay folder you want to act on, same convention as app.toml/cluster.toml. Adapted from
+# vks-apps/hoppenbrouwer-ems/vm-tasks.toml: that version takes a VM=<name> parameter to share one
+# task file across several VM-instance overlays; this version instead resolves everything from
+# the current directory (kustomize build .), consistent with how every other task in this repo
+# works — simpler when each app folder is its own overlay-per-namespace, like the rest of apps/.
+
+["vm:power-on"]
+description = "Power on the VirtualMachine in the current overlay"
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+[ -n "$VM_NAME" ] && [ "$VM_NAME" != "null" ] || { echo "ERROR: no VirtualMachine found by 'kustomize build .' in this folder" >&2; exit 1; }
+
+set -x
+kubectl patch virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" --type=merge -p '{"spec":{"powerState":"PoweredOn"}}'
+kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" -o custom-columns='NAME:.metadata.name,POWER:.spec.powerState,STATE:.status.powerState,IP:.status.network.primaryIP4'
+set +x
+'''
+
+["vm:power-off"]
+description = "Hard power off the VirtualMachine in the current overlay"
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+[ -n "$VM_NAME" ] && [ "$VM_NAME" != "null" ] || { echo "ERROR: no VirtualMachine found by 'kustomize build .' in this folder" >&2; exit 1; }
+
+set -x
+kubectl patch virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" --type=merge -p '{"spec":{"powerState":"PoweredOff","powerOffMode":"Hard"}}'
+kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" -o custom-columns='NAME:.metadata.name,POWER:.spec.powerState,STATE:.status.powerState,IP:.status.network.primaryIP4'
+set +x
+'''
+
+["vm:restart"]
+description = "Restart the VirtualMachine in the current overlay (vm-operator-managed power cycle)"
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+[ -n "$VM_NAME" ] && [ "$VM_NAME" != "null" ] || { echo "ERROR: no VirtualMachine found by 'kustomize build .' in this folder" >&2; exit 1; }
+
+# nextRestartTime: "now" tells vm-operator to restart the VM without a manual off/on sequence.
+kubectl patch virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" --type=merge -p '{"spec":{"nextRestartTime":"now"}}'
+kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" -o custom-columns='NAME:.metadata.name,POWER:.spec.powerState,STATE:.status.powerState,IP:.status.network.primaryIP4'
+'''
+
+["vm:delete"]
+description = "Delete the VirtualMachine in the current overlay. Destructive — asks for typed confirmation. The data-disk PVC survives."
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+[ -n "$VM_NAME" ] && [ "$VM_NAME" != "null" ] || { echo "ERROR: no VirtualMachine found by 'kustomize build .' in this folder" >&2; exit 1; }
+
+VOLUME_PVCS=$(kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" -o jsonpath='{.spec.volumes[*].persistentVolumeClaim.claimName}' 2>/dev/null || true)
+if [ -n "$VOLUME_PVCS" ]; then
+  echo "NOTE: '${VM_NAME}' has attached PVC-backed volume(s): ${VOLUME_PVCS}"
+  echo "      Deleting the VirtualMachine does NOT delete these PVCs — data survives."
+  echo "      To permanently wipe: kubectl delete pvc ${VOLUME_PVCS} -n ${VM_NS} --context ${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+  echo ""
+fi
+
+echo "About to delete VirtualMachine '${VM_NAME}' in namespace ${VM_NS}."
+read -r -p "Type the VM name to confirm: " CONFIRM
+[ "${CONFIRM}" = "${VM_NAME}" ] || { echo "Aborted."; exit 1; }
+kubectl delete virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+echo "Deleted. Redeploy (reattaching the same data disk): mise run vm:redeploy"
+'''
+
+["vm:redeploy"]
+description = "Delete (if it exists) and re-apply the VirtualMachine in the current overlay, then wait for it to report an IP"
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+[ -n "$VM_NAME" ] && [ "$VM_NAME" != "null" ] || { echo "ERROR: no VirtualMachine found by 'kustomize build .' in this folder" >&2; exit 1; }
+CTX="${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+
+# cloud-init is one-shot, so re-applying an unchanged VirtualMachine spec over an EXISTING VM
+# does NOT re-provision it — delete first, then re-apply. The data disk's claimName is a stable
+# reference (not vm-operator-owned), so the new VM comes back up attached to the SAME disk, and
+# the blkid check in base/vm.yaml's runcmd means it mounts the existing filesystem instead of
+# reformatting it — nothing under /var/lib/hello-vm (including /home/hello and /root) is lost.
+if kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${CTX}" >/dev/null 2>&1; then
+  echo "=== ${VM_NAME} already exists — deleting before re-apply ==="
+  echo "About to delete VirtualMachine '${VM_NAME}' in namespace ${VM_NS}."
+  read -r -p "Type the VM name to confirm: " CONFIRM
+  [ "${CONFIRM}" = "${VM_NAME}" ] || { echo "Aborted."; exit 1; }
+  kubectl delete virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${CTX}"
+else
+  echo "=== ${VM_NAME} does not exist yet — first-time deploy, no delete needed ==="
+fi
+
+echo ""
+echo "=== Applying ${VM_NAME} ==="
+kubectl apply -k . --context "${CTX}"
+
+echo ""
+echo "=== Waiting for ${VM_NAME} to report an IP ==="
+ATTEMPTS=60   # 10 minutes at 10s intervals
+for i in $(seq 1 "$ATTEMPTS"); do
+  READY=$(kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${CTX}" -o jsonpath='{.status.network.primaryIP4}' 2>/dev/null || true)
+  if [ -n "$READY" ]; then
+    echo "  -> ${VM_NAME} is up at ${READY}"
+    break
+  fi
+  PHASE=$(kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${CTX}" -o jsonpath='{.status.phase}' 2>/dev/null || echo "unknown")
+  echo "  [${i}/${ATTEMPTS}] phase=${PHASE} — waiting..."
+  sleep 10
+done
+[ -n "${READY:-}" ] || { echo "TIMEOUT: no IP after $((ATTEMPTS * 10 / 60)) minutes"; exit 1; }
+
+echo ""
+kubectl get virtualmachine "${VM_NAME}" -n "${VM_NS}" --context "${CTX}" -o custom-columns='NAME:.metadata.name,POWER:.spec.powerState,STATE:.status.powerState,IP:.status.network.primaryIP4'
+echo ""
+echo "cloud-init still needs a few minutes to finish (package install + disk setup) before SSH is fully usable."
+'''
+
+["vm:set-password"]
+description = "Create/rotate the login-password Secret referenced by the current overlay's VirtualMachine"
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .metadata.namespace')
+SECRET_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .spec.bootstrap.cloudInit.cloudConfig.users[0].hashed_passwd.name')
+SECRET_KEY=$(printf '%s' "$BUILT" | yq 'select(.kind == "VirtualMachine") | .spec.bootstrap.cloudInit.cloudConfig.users[0].hashed_passwd.key')
+[ -n "$SECRET_NAME" ] && [ "$SECRET_NAME" != "null" ] || { echo "ERROR: could not read users[0].hashed_passwd.name from the built manifest" >&2; exit 1; }
+CTX="${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+
+echo "Setting the login password (stored in Secret ${SECRET_NAME}/${SECRET_KEY}, namespace ${VM_NS})."
+HASH=$(openssl passwd -6)
+kubectl create secret generic "${SECRET_NAME}" -n "${VM_NS}" --context "${CTX}" \
+  --from-literal="${SECRET_KEY}=${HASH}" \
+  --dry-run=client -o yaml | kubectl apply --context "${CTX}" -f -
+
+echo ""
+echo "Secret set. cloud-init only applies this at first boot — an already-running VM won't pick"
+echo "up a rotated password until it's redeployed: mise run vm:redeploy"
+'''

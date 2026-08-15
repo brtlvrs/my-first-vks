@@ -30,6 +30,7 @@ apps/
   mise-tasks/
     app.toml                      # app:render/apply/delete
     cluster.toml                  # cluster:status/nodes/pods-not-running/kubeconfig
+    vm.toml                       # vm:power-on/power-off/restart/delete/redeploy/set-password
     whereamI.toml                 # wai — decode the current kube-context
 ```
 
@@ -54,6 +55,9 @@ Run these from inside the specific `<app>/overlays/<namespace>/` folder you want
 | `cluster:pods-not-running` | `kubectl get pods -A --field-selector=status.phase!=Running` — quick cluster-wide health check |
 | `cluster:kubeconfig` | Fetch the cluster's admin kubeconfig to `cluster-kubeconfig.yaml` |
 | `wai` | "Where Am I" — prints Supervisor / vSphere Namespace / cluster / k8s namespace for your current context |
+
+`vm:*` tasks (VM Service apps only, e.g. `hello-vm/`) are covered in
+[`hello-vm/README.md`](hello-vm/README.md#vm-mise-tasks).
 
 Also see the root [`mise-tasks/context.toml`](../mise-tasks/context.toml) tasks for authenticating
 before any of the above will work.
@@ -89,8 +93,10 @@ either as a starting point:
 
 `hello-vsphere-pod/` is otherwise the same restricted-PSS-compliant deployment as `hello-vks/`,
 plus `runtimeClassName: runv` in the pod spec — that field is what actually makes it a vSphere
-Pod. Concrete guidance on when to reach for either of these over a regular `hello-vks`-style app
-is still being worked out — see [`../TODO.md`](../TODO.md).
+Pod. `hello-vm/` goes further, into a realistic rootless-Podman host with a persistent data disk
+— see [`hello-vm/README.md`](hello-vm/README.md) for its deploy steps, what survives a redeploy,
+and its own `vm:*` mise tasks. Concrete guidance on when to reach for either of these over a
+regular `hello-vks`-style app is still being worked out — see [`../TODO.md`](../TODO.md).
 
 ## CHANGE_ME placeholders in the example
 
@@ -98,5 +104,6 @@ is still being worked out — see [`../TODO.md`](../TODO.md).
 |---|---|---|
 | `example-namespace` (folder + `VCF_NAMESPACE`) | every `overlays/example-namespace/mise.toml` | your real vSphere Namespace |
 | `service.beta.kubernetes.io/vsphere-load-balancer-class: "nsx"` | `hello-vks/base/service.yaml`, `hello-vsphere-pod/base/service.yaml` | your Supervisor's actual load-balancer class, if different |
-| `CHANGE_ME_VM_CLASS`, `CHANGE_ME_VM_IMAGE`, `CHANGE_ME_STORAGE_CLASS` | `hello-vm/base/vm.yaml` | values from `kubectl get virtualmachineclass` / `virtualmachineimage` / `storageclass` |
-| `CHANGE_ME_SSH_PUBLIC_KEY` | `hello-vm/base/vm.yaml` | your public key, see [`../docs/02-ssh-keys.md`](../docs/02-ssh-keys.md) |
+
+`hello-vm/`'s own placeholders (VM class/image/storage class, SSH key) are documented in
+[`hello-vm/README.md`](hello-vm/README.md#change_me-placeholders).

@@ -1,0 +1,17 @@
+# Demo compose stack for hello-vm — not applied by kustomize/mise, this VM has no automated
+# delivery mechanism for it (matching the source pattern this repo is based on). Copy it onto
+# the VM after cloud-init finishes and SSH is reachable, then run docker-compose from there —
+# see ../README.md.
+#
+# `hello` is the same trivial demo used in the production repo this is modeled on (confirms
+# Podman/docker-compose actually works, prints one line, exits). `it-tools` gives you something
+# with a web UI to actually look at — browse to http://<vm-ip>:8080 once it's up.
+services:
+  hello:
+    image: hello-world:latest
+
+  it-tools:
+    image: corentinth/it-tools:latest
+    ports:
+      - "8080:80"
+    restart: unless-stopped

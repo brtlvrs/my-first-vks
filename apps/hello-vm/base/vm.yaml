@@ -4,6 +4,13 @@
 # That's why there's no separate Namespace resource here, unlike apps/hello-vks/: the target
 # namespace IS the vSphere Namespace, set below via the overlay's `namespace:` field, not an
 # app-specific k8s namespace you create yourself.
+#
+# Rootless-Podman host, same shape as vks-apps/podman-host and vks-apps/hoppenbrouwer-ems: a
+# second "data" disk backs /var/lib/hello-vm, and /home/hello + /root are bind-mounted from it —
+# both survive a `kubectl delete virtualmachine` + re-apply (see base/pvc.yaml and README.md's
+# persistence table). The OS disk itself does NOT survive — it's rebuilt from `imageName` +
+# cloud-init on every redeploy, which is why nothing outside those two bind-mounted paths (or
+# /var/lib/hello-vm directly) should be relied on to persist.
 apiVersion: vmoperator.vmware.com/v1alpha5
 kind: VirtualMachine
 metadata:
@@ -25,9 +32,19 @@ spec:
         # GuestInfo. Check `kubectl get virtualmachine hello-vm -o yaml` under `status.network`
         # either way to see what address it actually got.
         dhcp4: true
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: hello-vm-data   # see base/pvc.yaml — must match its metadata.name
+      controllerType: SCSI
+      controllerBusNumber: 0
+      unitNumber: 1
   bootstrap:
     cloudInit:
       cloudConfig:
+        # groups: [sudo] gives password-gated sudo (Ubuntu's default %sudo rule) —
+        # deliberately NOT NOPASSWD: rootless Podman needs no root at all for day-to-day
+        # docker-compose operations, this is only for occasional OS-level tasks.
         users:
           - name: hello
             groups: [sudo]
@@ -37,8 +54,88 @@ spec:
             # field for an inline hash. Create it out-of-band, never commit the hash itself:
             #   kubectl create secret generic hello-vm-passwd -n <namespace> \
             #     --from-literal=password="$(openssl passwd -6)"
+            # or: mise run vm:set-password (from the overlay folder)
             hashed_passwd:
               name: hello-vm-passwd
               key: password
             ssh_authorized_keys:
               - CHANGE_ME_SSH_PUBLIC_KEY   # see docs/02-ssh-keys.md for generating one
+        runcmd:
+          - hostnamectl set-hostname hello-vm
+          - apt-get update -q
+          - apt-get install -y curl vim podman uidmap slirp4netns fuse-overlayfs dbus-user-session
+
+          # Rootless Podman needs a subuid/subgid range for the user. Ubuntu cloud images
+          # normally allocate one automatically on user creation — this is a defense-in-depth
+          # guard in case the base image doesn't.
+          - |
+            grep -q "^hello:" /etc/subuid || echo "hello:100000:65536" >> /etc/subuid
+            grep -q "^hello:" /etc/subgid || echo "hello:100000:65536" >> /etc/subgid
+
+          # Data disk: format whole-disk (no partition table) with a stable LABEL, idempotently.
+          # The blkid check skips formatting (preserving data) when the PVC already carries a
+          # filesystem from a prior VM incarnation — this is what makes redeploys safe.
+          - |
+            if ! blkid /dev/sdb >/dev/null 2>&1; then
+              mkfs.ext4 -L data_disk /dev/sdb
+            fi
+            mkdir -p /var/lib/hello-vm
+            grep -q "LABEL=data_disk " /etc/fstab || \
+              echo "LABEL=data_disk /var/lib/hello-vm ext4 defaults,nofail,x-systemd.device-timeout=30 0 2" >> /etc/fstab
+            mount -a
+
+          # Persist /home/hello on the data disk via seed-then-bind-mount: a direct mount at
+          # /home/hello would shadow the SSH keys cloud-init's `users` module already wrote into
+          # the ephemeral home directory on an empty data disk, locking out SSH on first boot.
+          # Seeding first avoids that. This same bind mount is what makes Podman's rootless
+          # storage root ($HOME/.local/share/containers, created on first podman/docker-compose
+          # run) persistent too — it lives under the now-persistent home directory.
+          - |
+            HOME_STORE=/var/lib/hello-vm/home
+            if [ ! -d "$HOME_STORE" ]; then
+              mkdir -p "$HOME_STORE"
+              cp -a /home/hello/. "$HOME_STORE/"
+            fi
+            chown -R hello:hello "$HOME_STORE"
+            grep -q " /home/hello " /etc/fstab || \
+              echo "$HOME_STORE /home/hello none bind 0 0" >> /etc/fstab
+            mount --bind "$HOME_STORE" /home/hello
+
+          # Persist /root the same way, for the same reason (anything root creates outside the
+          # data disk — shell history, scratch files, ad-hoc notes — is otherwise lost on every
+          # redeploy, same as everything else on the OS disk).
+          - |
+            ROOT_HOME_STORE=/var/lib/hello-vm/root-home
+            if [ ! -d "$ROOT_HOME_STORE" ]; then
+              mkdir -p "$ROOT_HOME_STORE"
+              cp -a /root/. "$ROOT_HOME_STORE/"
+            fi
+            chown -R root:root "$ROOT_HOME_STORE"
+            chmod 700 "$ROOT_HOME_STORE"
+            grep -q " /root " /etc/fstab || \
+              echo "$ROOT_HOME_STORE /root none bind 0 0" >> /etc/fstab
+            mount --bind "$ROOT_HOME_STORE" /root
+
+          # Enable rootless Podman's Docker-compatible API socket as a lingering user service, so
+          # it's available for docker-compose without an active SSH session.
+          - |
+            loginctl enable-linger hello
+            RUNUSER_UID=$(id -u hello)
+            for i in $(seq 1 30); do
+              [ -S "/run/user/${RUNUSER_UID}/bus" ] && break
+              sleep 1
+            done
+            su - hello -c "XDG_RUNTIME_DIR=/run/user/${RUNUSER_UID} systemctl --user enable --now podman.socket"
+
+          # Docker Compose v2 static binary, talking to Podman's rootless socket via DOCKER_HOST
+          # — chosen over podman-compose for full compose-spec fidelity. Update the version and
+          # matching sha256 together from https://github.com/docker/compose/releases.
+          - |
+            curl -fsSL -o /usr/local/bin/docker-compose \
+              "https://github.com/docker/compose/releases/download/v5.4.0/docker-compose-linux-x86_64"
+            echo "837fd1d35bf6a494f41b5b5988269a7be79de337cf1a1a6ff0e45ab51bb4e9be  /usr/local/bin/docker-compose" | sha256sum -c -
+            chmod +x /usr/local/bin/docker-compose
+          - |
+            cat > /etc/profile.d/podman-docker-host.sh <<'PROFILE_EOF'
+            export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
+            PROFILE_EOF

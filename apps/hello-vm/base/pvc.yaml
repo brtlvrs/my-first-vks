@@ -1,0 +1,16 @@
+---
+# Data disk for hello-vm — /var/lib/hello-vm (persistent state), bind-mounted from it:
+# /home/hello, /root, and the rootless Podman storage root, so all three survive a VM redeploy.
+# Referenced by claimName in vm.yaml, so it survives `kubectl delete virtualmachine` — only an
+# explicit `kubectl delete pvc hello-vm-data -n <namespace>` destroys it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hello-vm-data
+  namespace: CHANGE_ME_NAMESPACE   # overridden by `namespace:` in the overlay's kustomization.yaml
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: CHANGE_ME_STORAGE_CLASS
+  resources:
+    requests:
+      storage: 20Gi   # CHANGE_ME (maybe) — size to your compose stack's actual data footprint
