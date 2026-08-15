@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: example-namespace   # the namespace in the Supervisor, a.k.a. the vSphere Namespace — CHANGE_ME
+resources:
+  - ../../bases/vks-cluster
+patches:
+  - target:
+      kind: Cluster
+      name: base-cluster
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: example-cluster   # name of the resulting Kubernetes cluster — CHANGE_ME
+      - op: replace
+        path: /spec/topology/classRef/name
+        value: builtin-generic-v3.6.0
+      - op: replace
+        path: /spec/topology/version
+        value: v1.35.5+vmware.1-vkr.1
+      - op: replace
+        path: /spec/topology/variables/0/value
+        value: best-effort-small   # a stock VCF default vmClass — verify with `kubectl get vmclass`
+      - op: replace
+        path: /spec/topology/variables/1/value
+        value: example-storage-policy   # CHANGE_ME — a storage policy name from `kubectl get storageclass`
+      - op: replace
+        path: /spec/topology/controlPlane/replicas
+        value: 3
+      - op: replace
+        path: /spec/topology/workers/machineDeployments/0/replicas
+        value: 3

@@ -1,0 +1,67 @@
+["cluster:status"]
+description = "Check VKS cluster status via the vcf CLI for the current vSphere Namespace"
+run = '''
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_ENDPOINT:?Missing VCF_ENDPOINT env var.}"
+
+if [[ -z ${VCF_CLUSTER:-} ]]; then
+    echo "--- Showing supervisor status ---"
+    set -x
+    kubectl cluster-info
+    set +x
+    echo "--- Supervisor nodes ---"
+    set -x
+    kubectl get nodes -o wide
+    set +x
+    exit 0
+fi
+echo "cluster: ${VCF_CLUSTER}"
+set -x
+vcf context use ${VCF_SUPERVISOR}:${VCF_NAMESPACE}
+vcf cluster get ${VCF_CLUSTER} --show-details
+set +x
+'''
+
+["cluster:nodes"]
+description = "Show node status of this cluster (or the Supervisor's nodes, if VCF_CLUSTER isn't set)"
+run = '''
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_ENDPOINT:?Missing VCF_ENDPOINT env var.}"
+
+if [[ -z ${VCF_CLUSTER:-} ]]; then
+    echo "--- Supervisor nodes ---"
+    set -x
+    kubectl get nodes -o wide
+    set +x
+    exit 0
+fi
+echo "  cluster: ${VCF_CLUSTER}"
+echo "  context: ${VCF_NAMESPACE}:${VCF_CLUSTER}"
+echo "using context: $(kubectl config current-context)"
+echo ""
+set -x
+kubectl get nodes -o wide --context ${VCF_NAMESPACE}:${VCF_CLUSTER}
+set +x
+'''
+
+["cluster:pods-not-running"]
+description = "Show all pods that are not in the Running state"
+run = '''
+echo "--- Non-running pods (all namespaces) ---"
+echo "using context: $(kubectl config current-context)"
+echo ""
+set -x
+kubectl get pods -A --field-selector=status.phase!=Running
+set +x
+'''
+
+["cluster:kubeconfig"]
+description = "Fetch the admin kubeconfig for the current cluster"
+run = '''
+: "${VCF_CLUSTER:?Missing VCF_CLUSTER env var.}"
+set -x
+vcf cluster kubeconfig get ${VCF_CLUSTER} --export-file cluster-kubeconfig.yaml -n ${VCF_NAMESPACE}
+set +x
+'''

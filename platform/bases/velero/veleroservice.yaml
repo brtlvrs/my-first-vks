@@ -1,0 +1,25 @@
+---
+apiVersion: veleroappoperator.vmware.com/v1alpha1
+kind: VeleroService
+metadata:
+  name: velero                     # CHANGE_ME — overridden per overlay via a JSON6902 patch
+  namespace: CHANGE_ME_NAMESPACE   # CHANGE_ME — overridden by `namespace:` in the overlay's kustomization.yml
+spec:
+  objectstoreprovider: aws   # S3-compatible provider plugin; works against MinIO and other S3-compatible
+                              # backends, not just real AWS — see docs/03-required-platform-services.md
+  # Plugin image refs — read off the operator's own default velero-vsphere-plugin-config ConfigMap on a
+  # live Supervisor. Re-verify against your target Supervisor/Velero operator version before relying on
+  # these (see TODO.md).
+  plugins:
+    - projects.packages.broadcom.com/velero/velero-plugin-for-aws:v1.6.1
+    - projects.packages.broadcom.com/velero/velero-plugin-for-vsphere:v1.6.0
+  bucket: CHANGE_ME_BUCKET   # no S3-compatible bucket exists until you provision one — see docs/03
+  backuplocationconfig: region=CHANGE_ME_REGION,s3ForcePathStyle=true,s3Url=https://CHANGE_ME_S3_URL
+  nodefaultbackuplocation: false
+  # Credentials are never committed to git. `nosecret: true` means this CR expects a pre-existing Secret
+  # named "cloud-credentials" (key "cloud", standard Velero AWS-plugin convention) in this same namespace,
+  # created imperatively — see docs/05-secret-management.md and docs/11-backups-with-velero.md.
+  nosecret: true
+  usevolumesnapshots: true
+  guestcbtenabled: false
+  upgradeoption: Manual

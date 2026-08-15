@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-vks
+  namespace: hello-vks
+  annotations:
+    # CHANGE_ME (maybe) — "nsx" is the load-balancer class shipped by default on many VCF/NSX
+    # Advanced Load Balancer Supervisor setups. If your Supervisor uses a different LB provider,
+    # check `kubectl get vSphereLoadBalancerService` support or ask your VI admin which class(es)
+    # are available — see docs/03-required-platform-services.md.
+    service.beta.kubernetes.io/vsphere-load-balancer-class: "nsx"
+spec:
+  type: LoadBalancer
+  selector:
+    app: hello-vks
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

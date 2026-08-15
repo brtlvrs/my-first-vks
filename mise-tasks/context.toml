@@ -1,0 +1,55 @@
+["context:supervisor"]
+description = "Create the context for the Supervisor (VCF_SUPERVISOR env var). Asks for your username/password (SSO); any existing context of the same name is deleted first."
+run = '''
+set -x
+vcf context delete ${VCF_SUPERVISOR} -y >/dev/null 2>&1
+vcf context create ${VCF_SUPERVISOR} --endpoint ${VCF_ENDPOINT} --auth-type basic --ca-certificate ${MISE_PROJECT_ROOT}/vcsa-ca.pem
+vcf context use "${VCF_SUPERVISOR}${VCF_NAMESPACE:+:${VCF_NAMESPACE}}"
+set +x
+'''
+
+["context:cluster"]
+description = "Create the context for a VKS cluster, based on the current folder location (VCF_NAMESPACE/VCF_CLUSTER env vars)."
+run = '''
+set -x
+vcf context delete ${VCF_NAMESPACE} -y >/dev/null 2>&1
+vcf context create ${VCF_NAMESPACE} --endpoint ${VCF_ENDPOINT} --auth-type basic --ca-certificate ${MISE_PROJECT_ROOT}/vcsa-ca.pem --workload-cluster-namespace ${VCF_NAMESPACE} --workload-cluster-name ${VCF_CLUSTER}
+vcf context use "${VCF_NAMESPACE}${VCF_CLUSTER:+:${VCF_CLUSTER}}"
+set +x
+'''
+
+["context:use"]
+description = "Set context based on your current location in the repo (VCF_NAMESPACE/VCF_CLUSTER env vars)."
+run = '''
+: "${VCF_NAMESPACE:?not set - run this from inside a platform/<namespace>/ or apps/<app>/overlays/<namespace>/ folder}"
+vcf context use "${VCF_NAMESPACE}${VCF_CLUSTER:+:${VCF_CLUSTER}}"
+'''
+
+["context:refresh"]
+description = "Refresh the (expired) context for the current folder."
+run = '''
+set -euo pipefail
+
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_ENDPOINT:?Missing VCF_ENDPOINT env var.}"
+
+CTX_CLUSTER="${VCF_SUPERVISOR}"
+CTX_NS="${VCF_NAMESPACE}"
+if [[ -n "${VCF_CLUSTER:-}" ]]; then
+    CTX_CLUSTER="${VCF_NAMESPACE}"
+    CTX_NS="${VCF_CLUSTER}"
+fi
+
+echo "==== Context information for ${CTX_CLUSTER} ===="
+kubectl config view | yq ".contexts[] | select(.name == \"${CTX_CLUSTER}\")"
+echo ""
+ACCOUNT=$(kubectl config view | yq ".contexts[] | select(.name == \"$CTX_CLUSTER\") | .context.user | split(\":\")[1]")
+ACCOUNT="${ACCOUNT%@*}"
+echo "Authenticated with: ${ACCOUNT}"
+echo ""
+
+set -x
+vcf context refresh "${CTX_CLUSTER}"
+set +x
+'''

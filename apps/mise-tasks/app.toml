@@ -1,0 +1,42 @@
+["app:render"]
+description = "Render the app manifest."
+dir = "{{cwd}}"
+run = '''
+echo "=== Supervisor/vSphere Namespace/K8s cluster : ${VCF_SUPERVISOR}/${VCF_NAMESPACE}/${VCF_CLUSTER:-}"
+set -x
+kustomize build .
+set +x
+'''
+
+["app:apply"]
+description = "Apply the app manifest"
+dir = "{{cwd}}"
+run = '''
+ctx="${VCF_NAMESPACE}:${VCF_CLUSTER:-}"
+if [[ -z "${VCF_CLUSTER:-}" ]]; then
+    ctx="${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+fi
+
+echo "=== Supervisor/vSphere Namespace/K8s cluster : ${VCF_SUPERVISOR}/${VCF_NAMESPACE}/${VCF_CLUSTER:-}"
+echo "    context: ${ctx}"
+
+set -x
+kubectl apply -k . --context ${ctx}
+set +x
+'''
+
+["app:delete"]
+description = "Delete the app manifest"
+dir = "{{cwd}}"
+run = '''
+ctx="${VCF_NAMESPACE}:${VCF_CLUSTER:-}"
+if [[ -z "${VCF_CLUSTER:-}" ]]; then
+    ctx="${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+fi
+
+echo "=== Supervisor/vSphere Namespace/K8s cluster : ${VCF_SUPERVISOR}/${VCF_NAMESPACE}/${VCF_CLUSTER:-}"
+echo "    context: ${ctx}"
+set -x
+kubectl delete -k . --context ${ctx}
+set +x
+'''

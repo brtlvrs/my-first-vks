@@ -1,0 +1,59 @@
+# tasks/whereamI.toml
+
+[wai]
+description = "Where Am I: detect Supervisor vs VKS cluster and derive vSphere Namespace from the current kube-context"
+run = '''
+{% raw %}
+#!/usr/bin/env bash
+set -e
+
+ctx="$(kubectl config current-context)"
+
+IFS=':' read -ra parts <<< "$ctx"
+
+supervisor=""
+vsphere_ns=""
+k8s_ns=""
+k8s_cluster=""
+
+if [[ ${#parts[@]} -eq 2 ]]; then
+    first="${parts[0]}"
+    second="${parts[1]}"
+
+    # A Supervisor context name is whatever VCF_SUPERVISOR was set to (see mise.toml [env]).
+    # If the first segment matches that, we're on the Supervisor itself; otherwise the first
+    # segment is the vSphere Namespace and the second is the workload cluster name.
+    if [[ -n "${VCF_SUPERVISOR:-}" && "$first" == "${VCF_SUPERVISOR}" ]]; then
+        supervisor="$first"
+        vsphere_ns="$second"
+        k8s_ns="$second"
+        k8s_cluster="- (supervisor)"
+    else
+        supervisor="-"
+        vsphere_ns="$first"
+        k8s_cluster="$second"
+        k8s_ns=$(kubectl config view --minify -o jsonpath='{..namespace}' 2>/dev/null || echo "default")
+    fi
+else
+    echo "⚠️  Unrecognized context format (expected 'part1:part2'): $ctx" >&2
+    echo "   Falling back to standard detection..."
+
+    k8s_ns=$(kubectl config view --minify -o jsonpath='{..namespace}' 2>/dev/null || echo "default")
+
+    if kubectl get namespace "$k8s_ns" -o jsonpath='{.metadata.labels.vsphere-namespace}' 2>/dev/null | grep -q .; then
+        supervisor="Detected"
+        vsphere_ns=$(kubectl get namespace "$k8s_ns" -o jsonpath='{.metadata.labels.vsphere-namespace}')
+        k8s_cluster="- (supervisor)"
+    else
+        k8s_cluster="$ctx"
+        vsphere_ns="Unknown (check context config)"
+    fi
+fi
+
+echo "Context:               $ctx"
+echo "Supervisor:            $supervisor"
+echo "vSphere Namespace:     $vsphere_ns"
+echo "K8s Cluster:           $k8s_cluster"
+echo "K8s Namespace:         $k8s_ns"
+{% endraw %}
+'''

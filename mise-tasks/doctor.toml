@@ -1,0 +1,63 @@
+["doctor"]
+description = "Check that the CLIs this repo needs are installed, and print their versions."
+run = '''
+set -uo pipefail
+
+ok_count=0
+warn_count=0
+fail_count=0
+
+ok()   { echo "  [ OK ] $1"; ok_count=$((ok_count+1)); }
+warn() { echo "  [WARN] $1"; warn_count=$((warn_count+1)); }
+fail() { echo "  [FAIL] $1"; fail_count=$((fail_count+1)); }
+
+section() { echo; echo "-- $1 --"; }
+
+check_cli() {
+    local name="$1" version_cmd="$2"
+    if command -v "$name" >/dev/null 2>&1; then
+        local version
+        version=$(eval "$version_cmd" 2>/dev/null | head -n1)
+        ok "$name (${version:-installed, version unknown})"
+    else
+        fail "$name not found on PATH"
+    fi
+}
+
+section "mise-managed CLIs (see [tools] in mise.toml)"
+check_cli kubectl "kubectl version --client --output=yaml 2>/dev/null | head -n2 | tail -n1"
+check_cli kubectx  "kubectx --version"
+check_cli kubens   "kubens --version"
+check_cli k9s      "k9s version --short"
+check_cli jq       "jq --version"
+check_cli yq       "yq --version"
+check_cli kustomize "kustomize version"
+
+section "manually installed CLIs"
+if command -v vcf >/dev/null 2>&1; then
+    ok "vcf ($(vcf version 2>/dev/null | head -n1))"
+else
+    warn "vcf not found on PATH — see docs/01-prepare-your-workstation.md (not mise-installable, download from the Supervisor UI)"
+fi
+
+if command -v git >/dev/null 2>&1; then
+    ok "git ($(git --version))"
+else
+    fail "git not found on PATH"
+fi
+
+section "optional but recommended"
+if command -v fzf >/dev/null 2>&1; then
+    ok "fzf (used for interactive pickers in some tasks, e.g. cluster:delete)"
+else
+    warn "fzf not found — interactive pickers will fall back to plain prompts where supported"
+fi
+
+section "summary"
+echo "  ok: ${ok_count}  warn: ${warn_count}  fail: ${fail_count}"
+if [[ "${fail_count}" -gt 0 ]]; then
+    echo
+    echo "One or more required CLIs are missing. See docs/01-prepare-your-workstation.md."
+    exit 1
+fi
+'''

@@ -1,0 +1,26 @@
+[env]
+# Fill these in for the target customer environment, or better: override them in a
+# gitignored .mise.local.toml (same [env] shape) so this file stays generic. See
+# docs/06-connecting-to-supervisor.md.
+VCF_ENDPOINT = "CHANGE_ME_VCF_ENDPOINT"       # Supervisor API address, e.g. "https://192.0.2.10" or a hostname
+VCF_SUPERVISOR = "CHANGE_ME_VCF_SUPERVISOR"   # Supervisor name to use as a vcf/kubectl context, e.g. "sv-01"
+
+[tools]
+kubectl = "1.36.2"
+kubectx = "latest"
+kubens = "latest"
+k9s = "latest"
+jq = "latest"
+yq = "latest"
+kustomize = "latest"
+
+[tasks."mise:env"]
+description = "Show MISE / VCF related environment variables"
+run = '''
+set -euo pipefail
+echo
+echo "== ALL MISE_* / usage_* / VCF_* variables currently in the environment =="
+if ! env | grep -E '^(MISE_|__MISE|usage_|VCF_)'| sort; then
+    echo "(none found)"
+fi
+'''

@@ -1,0 +1,25 @@
+["docs:toc"]
+description = "Update the table of contents in markdown files using markdown-toc"
+tools = { node = "lts" }
+
+usage = 'arg "<file>" help="Specific markdown file (optional)" default=""'
+
+run = """
+#!/usr/bin/env bash
+
+# Install tool globally if missing (runs only once)
+if ! command -v markdown-toc &> /dev/null; then
+  echo "Installing markdown-toc..."
+  npm install -g markdown-toc
+fi
+
+TARGET_FILE="${usage_file}"
+
+if [ -n "$TARGET_FILE" ]; then
+  echo "Updating TOC: $TARGET_FILE"
+  markdown-toc -i "$TARGET_FILE"
+else
+  echo "Updating TOC for all .md files..."
+  find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./.git/*" -exec markdown-toc -i {} \\;
+fi
+"""

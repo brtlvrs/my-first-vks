@@ -1,0 +1,119 @@
+["cluster:render"]
+description = "Render the current namespace's service overlay (folder you're in) to preview the final YAML"
+dir = "{{cwd}}"
+run = '''
+set -x
+kustomize build .
+set +x
+'''
+
+["cluster:diff"]
+description = "Dry-run diff of the current overlay against the live cluster"
+env = { KUBECTL_EXTERNAL_DIFF = "git diff --no-index" }
+dir = "{{cwd}}"
+run = '''
+set -x
+kubectl diff -k . --context ${VCF_SUPERVISOR}:${VCF_NAMESPACE}
+set +x
+'''
+
+["cluster:apply"]
+description = "Apply the current overlay to its Supervisor namespace"
+dir = "{{cwd}}"
+run = '''
+set -x
+kubectl apply -k . --context ${VCF_SUPERVISOR}:${VCF_NAMESPACE}
+set +x
+'''
+
+["cluster:status"]
+description = "Check VKS cluster status via the vcf CLI for the current vSphere Namespace"
+run = '''
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_ENDPOINT:?Missing VCF_ENDPOINT env var.}"
+
+if [[ -z ${VCF_CLUSTER:-} ]]; then
+    echo "--- Showing supervisor status ---"
+    set -x
+    kubectl cluster-info
+    set +x
+    echo "--- Supervisor nodes ---"
+    set -x
+    kubectl get nodes -o wide
+    set +x
+    exit 0
+fi
+echo "cluster: ${VCF_CLUSTER}"
+set -x
+vcf context use ${VCF_SUPERVISOR}:${VCF_NAMESPACE}
+vcf cluster get ${VCF_CLUSTER} --show-details
+set +x
+'''
+
+["cluster:nodes"]
+description = "Show node status of this cluster (or the Supervisor's nodes, if VCF_CLUSTER isn't set)"
+run = '''
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_ENDPOINT:?Missing VCF_ENDPOINT env var.}"
+
+if [[ -z ${VCF_CLUSTER:-} ]]; then
+    echo "--- Supervisor nodes ---"
+    set -x
+    kubectl get nodes -o wide
+    set +x
+    exit 0
+fi
+echo "  cluster: ${VCF_CLUSTER}"
+echo "  context: ${VCF_NAMESPACE}:${VCF_CLUSTER}"
+echo "using context: $(kubectl config current-context)"
+echo ""
+set -x
+kubectl get nodes -o wide --context ${VCF_NAMESPACE}:${VCF_CLUSTER}
+set +x
+'''
+
+["cluster:delete"]
+description = "Delete a VKS cluster. Destructive — asks for typed confirmation."
+run = '''
+set -euo pipefail
+
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var, tip: run mise run mise:env to see what is set.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var, tip: run mise run mise:env to see what is set.}"
+
+pick_cluster() {
+    if command -v fzf >/dev/null 2>&1; then
+        kubectl get cluster --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}" -n "${VCF_NAMESPACE}" --no-headers -o custom-columns='NAME:.metadata.name,STATUS:.status.phase' 2>/dev/null \
+        | fzf --prompt="Select cluster > " --height=12 --reverse \
+        | awk '{print $1}'
+    fi
+}
+
+CLUSTER_NAME="${1:-}"
+if [ -z "${CLUSTER_NAME}" ]; then
+    CLUSTER_NAME=$(pick_cluster || true)
+fi
+if [ -z "${CLUSTER_NAME}" ]; then
+    echo "No cluster name given and no selection made."
+    echo "Install fzf for interactive picking, or pass a name: mise run cluster:delete <name>"
+    exit 1
+fi
+
+echo "About to delete VKS cluster '${CLUSTER_NAME}' in ${VCF_NAMESPACE}."
+read -r -p "Type the cluster name to confirm: " CONFIRM
+[ "${CONFIRM}" = "${CLUSTER_NAME}" ] || { echo "Aborted."; exit 1; }
+
+set -x
+kubectl delete cluster "${CLUSTER_NAME}" -n "${VCF_NAMESPACE}" --context "${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+set +x
+'''
+
+["cluster:kubeconfig"]
+description = "Fetch the admin kubeconfig for the current cluster"
+run = '''
+: "${VCF_CLUSTER:?Missing VCF_CLUSTER env var — run this from inside a platform/<namespace>/<cluster>/ folder.}"
+set -x
+vcf cluster kubeconfig get ${VCF_CLUSTER} --export-file cluster-kubeconfig.yaml -n ${VCF_NAMESPACE}
+set +x
+'''

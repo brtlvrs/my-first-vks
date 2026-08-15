@@ -1,0 +1,3 @@
+[tools]
+# Not strictly needed here (kustomize/kubectl are pinned at the repo root), but shown as an
+# example of how to pin an app-specific tool version if you ever need one.

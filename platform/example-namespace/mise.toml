@@ -1,0 +1,5 @@
+[env]
+# Every service overlay under this namespace folder inherits VCF_NAMESPACE — mise cascades
+# [env] from parent directories down. Rename this folder (and this value) to match your real
+# vSphere Namespace, e.g. "intern" or "prod".
+VCF_NAMESPACE = "example-namespace"

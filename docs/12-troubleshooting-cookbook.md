@@ -1,0 +1,92 @@
+# 12 — troubleshooting cookbook
+
+Common failure modes and what they usually mean.
+
+<!-- toc -->
+
+- ["context not found" when running a mise task](#context-not-found-when-running-a-mise-task)
+- ["Missing VCF_NAMESPACE env var" (or similar)](#missing-vcf_namespace-env-var-or-similar)
+- [`sh: 1: set: Illegal option -o pipefail` (any OS)](#sh-1-set-illegal-option--o-pipefail-any-os)
+- [mise task fails on Windows with no useful error](#mise-task-fails-on-windows-with-no-useful-error)
+- [app pod stuck Pending or refused by admission](#app-pod-stuck-pending-or-refused-by-admission)
+- [copied an overlay folder and things target the wrong namespace](#copied-an-overlay-folder-and-things-target-the-wrong-namespace)
+- [`cluster:delete` has no interactive picker](#clusterdelete-has-no-interactive-picker)
+- [git line-ending changes on every checkout (Windows)](#git-line-ending-changes-on-every-checkout-windows)
+
+<!-- tocstop -->
+
+## "context not found" when running a mise task
+
+You haven't authenticated yet, or your session expired. Run `mise run context:supervisor` (first
+time) or `mise run context:refresh` / `context:use` (already created before) — see
+[chapter 06](06-connecting-to-supervisor.md).
+
+## "Missing VCF_NAMESPACE env var" (or similar)
+
+Every `cluster:*`/`context:*` task guards on the env vars it needs and tells you exactly which
+one is missing. This almost always means you're either not standing in the folder you think you
+are, or that folder (or a parent of it) is missing its `mise.toml` — run `mise run mise:env` from
+where you are to see exactly what mise has resolved, and compare against
+[chapter 07](07-repo-structure-and-conventions.md#how-mise-env-cascades).
+
+## `sh: 1: set: Illegal option -o pipefail` (any OS)
+
+mise's own default inline shell is a plain POSIX `sh`, not bash, on every OS — this repo's tasks
+are bash. You skipped (or mis-typed) the global mise settings block from
+[chapter 01, step 3](01-prepare-your-workstation.md#3-configure-mises-global-settings). This bites
+Linux and macOS too, not just Windows — add `unix_default_inline_shell_args = "bash -c"` to your
+global `~/.config/mise/config.toml` and re-run.
+
+## mise task fails on Windows with no useful error
+
+Almost always the global mise shell setting from
+[chapter 01, step 3](01-prepare-your-workstation.md#3-configure-mises-global-settings) is missing
+or points at the wrong Git Bash path. Confirm Git Bash exists at the path in your
+`~/.config/mise/config.toml` (or `<user folder>\.config\mise\config.toml`), and that you installed
+Git via `winget install Git.Git` (not some other distribution that puts `bash.exe` somewhere
+else).
+
+## app pod stuck Pending or refused by admission
+
+If the namespace enforces the Restricted Pod Security Standard (every namespace this repo
+provisions does, by default — see `pod-security.kubernetes.io/enforce: restricted` in
+`apps/hello-vks/base/namespace.yaml`), a container that runs as root, doesn't drop all
+capabilities, or doesn't set `seccompProfile` will be rejected outright, not just warned about.
+`kubectl describe pod <pod> -n <namespace>` or `kubectl get events -n <namespace>` will show an
+admission-webhook denial message naming the exact field. Compare your container's
+`securityContext` against the one in `apps/hello-vks/base/deployment.yaml`, which is written to
+pass this from a public, non-root-friendly image.
+
+## copied an overlay folder and things target the wrong namespace
+
+A copy-pasted overlay has **two** places that need updating to match, not one — it's easy to
+update only one and get a confusing mismatch:
+
+1. The `mise.toml`'s `VCF_NAMESPACE` (and `VCF_CLUSTER`, if present) — controls which Supervisor
+   context `mise run context:*` and `cluster:*`/`app:*` tasks use.
+2. The `kustomization.yaml`/`kustomization.yml`'s `namespace:` field — controls what namespace the
+   *rendered manifest itself* declares.
+
+If these disagree, `app:render`/`cluster:render` will look fine, but `app:apply`/`cluster:apply`
+will land the resource somewhere other than where your `mise` context is pointed, and later
+`kubectl get` commands against "the right" namespace won't find it.
+
+## `cluster:delete` has no interactive picker
+
+`fzf` isn't installed — `mise run doctor` reports this as a `WARN`, not a `FAIL`, since it's
+optional. Either install `fzf`, or pass the cluster name directly:
+`mise run cluster:delete <name>`. See [`TODO.md`](../TODO.md).
+
+## git line-ending changes on every checkout (Windows)
+
+If `git status` shows every file as modified immediately after a fresh clone with no edits made,
+Windows' default CRLF line-ending conversion is fighting with this repo's shell scripts (mise
+`.toml` task files with inline bash need LF, not CRLF, to run correctly under Git Bash). Set, once,
+globally:
+
+```
+git config --global core.autocrlf input
+```
+
+then re-clone (or `git rm --cached -r .` followed by `git checkout .` in an existing clone) so the
+working tree gets re-normalized.
