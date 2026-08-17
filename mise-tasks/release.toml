@@ -1,0 +1,40 @@
+["release:tag"]
+description = "Create an annotated git tag from the latest released entry in CHANGELOG.md. Does not push it."
+run = '''
+set -euo pipefail
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Working tree isn't clean — commit or stash changes before tagging a release." >&2
+    exit 1
+fi
+
+# The first "## [X.Y.Z] - ..." header in CHANGELOG.md, skipping "## [Unreleased]".
+header_line=$(grep -m1 -E '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md || true)
+if [ -z "$header_line" ]; then
+    echo "No released version header (## [X.Y.Z] - ...) found in CHANGELOG.md." >&2
+    exit 1
+fi
+
+version=$(echo "$header_line" | sed -E 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/')
+tag="v${version}"
+
+if git rev-parse "$tag" >/dev/null 2>&1; then
+    echo "Tag $tag already exists." >&2
+    exit 1
+fi
+
+# Body of that section: everything between this header and the next "## " header.
+body=$(awk -v start="$header_line" '
+    $0 == start { found=1; next }
+    found && /^## / { exit }
+    found { print }
+' CHANGELOG.md)
+
+git tag -a "$tag" -m "$version" -m "$body"
+echo "Created annotated tag $tag."
+echo
+echo "This did not push the tag. Push it explicitly once you're ready:"
+for remote in $(git remote); do
+    echo "  git push $remote $tag"
+done
+'''

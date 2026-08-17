@@ -10,6 +10,7 @@ new tasks — it's advisory, for when you're ready to act on it.
 
 - [from manual apply to GitOps](#from-manual-apply-to-gitops)
 - [platform as a product](#platform-as-a-product)
+- [versioning this repo](#versioning-this-repo)
 - [12-factor apps](#12-factor-apps)
 - [building broader team fundamentals](#building-broader-team-fundamentals)
 - [where to track these](#where-to-track-these)
@@ -60,6 +61,32 @@ to resolve a remote ref instead of just reading a local folder. That's the wrong
 whose whole point is flattening the learning curve. When you do reach for it, the migration itself
 is mechanical: move `platform/bases/` into a new repo, tag it, push it, then update each
 namespace's `resources:` entries to the remote-ref form above.
+
+## versioning this repo
+
+This repo itself — not just the "platform as a product" idea above — is tagged using
+[Semantic Versioning](https://semver.org/): `vMAJOR.MINOR.PATCH`. The point of that scheme,
+specifically for a repo teams fork and later re-point at a newer tag, is that **the tag name
+alone answers "is pulling this update safe for my fork,"** with no need to read anything first:
+
+- **major** — a breaking change to something a fork would depend on: a renamed/restructured
+  folder, a renamed or removed mise task, a changed `CHANGE_ME_*` convention. Stop and read
+  [`CHANGELOG.md`](../CHANGELOG.md) before re-pointing your fork.
+- **minor** — something added without breaking what's already there: a new chapter, a new worked
+  example under `apps/`, a new task. Safe to pull.
+- **patch** — docs/typo fixes, no structural change at all. Always safe to pull.
+
+While the major version is `0` (`v0.y.z`), per the SemVer spec itself anything may still change —
+this repo hasn't yet been used for a real customer onboarding. See [`TODO.md`](../TODO.md) for
+what's gating a `v1.0.0`.
+
+**Cutting a release:**
+
+1. Move the entries accumulated under `## [Unreleased]` in `CHANGELOG.md` under a new
+   `## [X.Y.Z] - YYYY-MM-DD` header, choosing the bump per the rules above.
+2. `mise run release:tag` — reads that new header out of `CHANGELOG.md` and creates a local
+   annotated tag `vX.Y.Z`. It does not push anything.
+3. Push the tag yourself once you're ready: `git push <remote> vX.Y.Z`, once per remote.
 
 ## 12-factor apps
 

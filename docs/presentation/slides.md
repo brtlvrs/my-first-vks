@@ -106,6 +106,7 @@ Each copied folder's own README lists exactly which `CHANGE_ME_*` values to fill
 - **Chapter 13** — GitOps, platform-as-a-product (versioned, tag-pinned bases), 12-factor apps
 - **Chapter 14** — for your VI/NSX admin: networking options, vmClasses, Content Libraries, RBAC
 - **`TODO.md`** — open items, tracked in the open rather than hidden
+- **Tagged releases** — pull a `vX.Y.Z` tag, not `main`; see `CHANGELOG.md`
 
 ---
 

@@ -1,0 +1,36 @@
+# Changelog
+
+All notable changes to this repo are documented here, in the
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Versioning follows
+[Semantic Versioning](https://semver.org/) — see
+[`docs/13-next-steps.md#versioning-this-repo`](docs/13-next-steps.md#versioning-this-repo) for
+what a major/minor/patch bump means specifically for a repo you fork rather than install as a
+package.
+
+While the major version is `0`, per the SemVer spec anything may still change — this repo hasn't
+yet been used for a real customer onboarding, and `TODO.md` still has open design questions.
+
+## [Unreleased]
+
+## [0.1.0] - 2026-08-17
+
+### Added
+
+- The full `docs/` cookbook (chapters 00-15): workstation setup, SSH keys, required platform
+  services, VCF-native services, secret management, connecting to the Supervisor, repo
+  conventions, provisioning a cluster, deploying an app, day-2 operations, Pod Security
+  Standards, troubleshooting, next steps, infrastructure prerequisites for a VI/NSX admin, and a
+  further-reading index.
+- `platform/` — namespace-first kustomize layout with a worked `example-namespace/` provisioning
+  a VKS cluster, plus an optional (not shipped by default) Velero backups addon described in
+  chapter 11.
+- `apps/` — component-first kustomize layout with worked examples: `hello-vks` (a Restricted-PSS
+  compliant container), `hello-vsphere-pod` (the same container as a native vSphere Pod),
+  `hello-vm` (VM Service, with a persistent data disk across redeploys), and `it-tools` (a real
+  app deployed both as a VKS workload and as a vSphere Pod).
+- `mise.toml` / `mise-tasks/` — pinned CLI versions (`kubectl`, `kubectx`, `kubens`, `k9s`, `jq`,
+  `yq`, `kustomize`, `fzf`), a `doctor` task to validate a workstation, and shared tasks for
+  context-switching, docs maintenance, and the presentation deck below.
+- `docs/presentation/slides.md` — a Marp slide deck version of the cookbook, servable as HTML
+  (`mise run docs:present`) or rendered to PDF (`mise run docs:present-pdf`).
+- `TODO.md` — open design questions tracked in the open rather than resolved speculatively.

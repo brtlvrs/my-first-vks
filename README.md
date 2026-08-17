@@ -16,6 +16,7 @@ examples you can literally copy and rename rather than build from scratch.
 - [layout](#layout)
 - [quick start](#quick-start)
 - [why two different folder shapes](#why-two-different-folder-shapes)
+- [versioning](#versioning)
 
 <!-- tocstop -->
 
@@ -53,3 +54,11 @@ differently on purpose:
   actually navigate this repo during day-2 operations.
 
 See [`docs/07-repo-structure-and-conventions.md`](docs/07-repo-structure-and-conventions.md) for the full explanation.
+
+## versioning
+
+This repo is tagged with [Semantic Versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) —
+pull a specific tag rather than tracking `main`, so a later update to your fork is a deliberate
+choice, not something that lands underneath you. See [`CHANGELOG.md`](CHANGELOG.md) for what
+changed at each tag, and [`docs/13-next-steps.md#versioning-this-repo`](docs/13-next-steps.md#versioning-this-repo)
+for what a major/minor/patch bump means here.

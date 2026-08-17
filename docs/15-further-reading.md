@@ -44,6 +44,9 @@ to the wider field:
   principles. Not something this repo implements or enforces, but the underlying "working
   software over comprehensive documentation," "responding to change over following a plan"
   mindset is the same spirit behind this repo's worked-examples-over-reference-manual approach.
+- [semver.org](https://semver.org/) and [keepachangelog.com](https://keepachangelog.com/) — the
+  versioning scheme and changelog format this repo itself uses; see
+  [chapter 13](13-next-steps.md#versioning-this-repo).
 
 ## GitOps
 

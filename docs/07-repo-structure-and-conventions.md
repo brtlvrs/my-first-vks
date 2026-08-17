@@ -54,6 +54,9 @@ carries a table listing every placeholder it introduces and what to replace it w
 [`platform/README.md`](../platform/README.md) and [`apps/README.md`](../apps/README.md) before
 copying an example folder for real use.
 
+This repo's own releases are tagged and changelogged — see
+[chapter 13](13-next-steps.md#versioning-this-repo) and [`CHANGELOG.md`](../CHANGELOG.md).
+
 ## an alternative pattern you'll see referenced: path-derived context
 
 If you go on to look at a production repo this project is modeled on, you may see `VCF_NAMESPACE`
