@@ -6,7 +6,13 @@ set -euo pipefail
 
 : "${GOVC_URL:?Missing GOVC_URL env var -- fill in CHANGE_ME_GOVC_URL in the root mise.toml first.}"
 
-export GOVC_TLS_CA_CERTS="${MISE_PROJECT_ROOT}/vcsa-ca.pem"
+CA_CERT="${MISE_PROJECT_ROOT}/vcsa-ca.pem"
+if [ -f "${CA_CERT}" ]; then
+    export GOVC_TLS_CA_CERTS="${CA_CERT}"
+else
+    echo "No CA cert at ${CA_CERT} (see docs/06-connecting-to-supervisor.md) -- connecting insecurely (GOVC_INSECURE=true)." >&2
+    export GOVC_INSECURE=true
+fi
 
 read -rp "vCenter username: " GOVC_USERNAME
 export GOVC_USERNAME
@@ -26,6 +32,13 @@ run = '''
 set -euo pipefail
 
 : "${GOVC_URL:?Missing GOVC_URL env var -- fill in CHANGE_ME_GOVC_URL in the root mise.toml first.}"
+
+CA_CERT="${MISE_PROJECT_ROOT}/vcsa-ca.pem"
+if [ -f "${CA_CERT}" ]; then
+    export GOVC_TLS_CA_CERTS="${CA_CERT}"
+else
+    export GOVC_INSECURE=true
+fi
 
 govc session.logout
 '''

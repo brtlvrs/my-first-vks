@@ -109,9 +109,11 @@ Two optional tasks, mise-installed on first use (no manual download, unlike `vcf
 Fill in `CHANGE_ME_GOVC_URL` in the root `mise.toml` `[env]` block first. Note this is
 **vCenter Server's own endpoint** (its FQDN/IP — what you'd browse to at `https://<vcenter>/ui`),
 not `VCF_ENDPOINT` (the Supervisor API) — two different endpoints on the same VCF instance, even
-though the same credentials usually work against both. `govc:login` reuses the CA certificate
-already fetched for [chapter 06](06-connecting-to-supervisor.md) (`vcsa-ca.pem`) rather than
-asking for a second one.
+though the same credentials usually work against both. `govc:login`/`govc:logout` reuse the CA
+certificate already fetched for [chapter 06](06-connecting-to-supervisor.md) (`vcsa-ca.pem`)
+rather than asking for a second one — and if that file isn't there yet, they fall back to an
+insecure (`GOVC_INSECURE=true`) connection rather than failing outright, printing a warning so
+you know that's what happened.
 
 This is entirely optional — nothing in chapters 00-13 or this chapter's checklist requires
 `govc`; it's here for whoever ends up needing vCenter-level access that `kubectl`/`vcf` can't

@@ -12,6 +12,11 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+### Fixed
+
+- `govc:login`/`govc:logout` fall back to an insecure connection (`GOVC_INSECURE=true`, with a
+  warning) when `vcsa-ca.pem` isn't present yet, instead of failing outright.
+
 ## [0.2.0] - 2026-08-17
 
 ### Added
