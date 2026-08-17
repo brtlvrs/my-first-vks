@@ -4,6 +4,10 @@
 # docs/06-connecting-to-supervisor.md.
 VCF_ENDPOINT = "CHANGE_ME_VCF_ENDPOINT"       # Supervisor API address, e.g. "https://192.0.2.10" or a hostname
 VCF_SUPERVISOR = "CHANGE_ME_VCF_SUPERVISOR"   # Supervisor name to use as a vcf/kubectl context, e.g. "sv-01"
+GOVC_URL = "CHANGE_ME_GOVC_URL"               # vCenter Server's own endpoint (its FQDN/IP) -- distinct
+                                               # from VCF_ENDPOINT, the Supervisor API. Only used by the
+                                               # optional govc:login/govc:logout tasks -- see
+                                               # docs/14-infrastructure-prerequisites.md.
 
 [tools]
 kubectl = "1.36.2"

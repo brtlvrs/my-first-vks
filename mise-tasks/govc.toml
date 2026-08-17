@@ -1,0 +1,31 @@
+["govc:login"]
+description = "Log in to vCenter (GOVC_URL) with govc, prompting for username/password. Persists the session to ~/.govmomi/sessions/ so later govc commands don't re-prompt."
+tools = { "github:vmware/govmomi[exe=govc]" = "latest" }
+run = '''
+set -euo pipefail
+
+: "${GOVC_URL:?Missing GOVC_URL env var -- fill in CHANGE_ME_GOVC_URL in the root mise.toml first.}"
+
+export GOVC_TLS_CA_CERTS="${MISE_PROJECT_ROOT}/vcsa-ca.pem"
+
+read -rp "vCenter username: " GOVC_USERNAME
+export GOVC_USERNAME
+
+read -rsp "vCenter password: " GOVC_PASSWORD
+export GOVC_PASSWORD
+echo
+
+govc session.login
+govc about
+'''
+
+["govc:logout"]
+description = "Log out of the current govc session against GOVC_URL."
+tools = { "github:vmware/govmomi[exe=govc]" = "latest" }
+run = '''
+set -euo pipefail
+
+: "${GOVC_URL:?Missing GOVC_URL env var -- fill in CHANGE_ME_GOVC_URL in the root mise.toml first.}"
+
+govc session.logout
+'''

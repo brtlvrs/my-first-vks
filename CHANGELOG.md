@@ -12,6 +12,13 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+### Added
+
+- `mise run govc:login` / `govc:logout` — optional tasks for direct `govc` access to vCenter
+  (outside what `kubectl`/`vcf` expose), documented in
+  [chapter 14](docs/14-infrastructure-prerequisites.md#govc-optional-direct-vcenter-access).
+  Adds `GOVC_URL` to the root `mise.toml [env]` block.
+
 ## [0.1.0] - 2026-08-17
 
 ### Added

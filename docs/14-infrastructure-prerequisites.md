@@ -11,6 +11,7 @@ this as the list of things to request from whoever it is, not something to do yo
 - [networking: three ways to get there](#networking-three-ways-to-get-there)
 - [vmClasses](#vmclasses)
 - [content libraries](#content-libraries)
+- [govc: optional direct vCenter access](#govc-optional-direct-vcenter-access)
 - [RBAC: getting your team access to a namespace](#rbac-getting-your-team-access-to-a-namespace)
 - [checklist to hand to your VI/platform admin](#checklist-to-hand-to-your-viplatform-admin)
 - [further reading](#further-reading)
@@ -88,6 +89,33 @@ anything at all inside a namespace.
 If `CHANGE_ME_VM_IMAGE` in `apps/hello-vm/` has no real value to reach for, that's a sign either
 no content library is synced yet, or the one that is doesn't have an image you want — both are
 VI-admin-side fixes.
+
+## govc: optional direct vCenter access
+
+`vcf`/`kubectl` only expose what's modeled as Supervisor-namespace objects — `vmClasses` and
+content library images, as above, both read-only from inside a namespace. For anything
+**outside** that surface (storage policies, resource pools, other vCenter inventory),
+[`govc`](https://github.com/vmware/govmomi/tree/main/govc) — VMware's own vCenter CLI — talks to
+vCenter's API directly instead of going through the Supervisor.
+
+Two optional tasks, mise-installed on first use (no manual download, unlike `vcf`):
+
+- `mise run govc:login` — prompts for your vCenter username and password, authenticates against
+  `GOVC_URL`, and persists the session to `~/.govmomi/sessions/` (outside this repo, never
+  written to git) so later `govc` commands don't re-prompt until the session expires or you log
+  out.
+- `mise run govc:logout` — ends that session.
+
+Fill in `CHANGE_ME_GOVC_URL` in the root `mise.toml` `[env]` block first. Note this is
+**vCenter Server's own endpoint** (its FQDN/IP — what you'd browse to at `https://<vcenter>/ui`),
+not `VCF_ENDPOINT` (the Supervisor API) — two different endpoints on the same VCF instance, even
+though the same credentials usually work against both. `govc:login` reuses the CA certificate
+already fetched for [chapter 06](06-connecting-to-supervisor.md) (`vcsa-ca.pem`) rather than
+asking for a second one.
+
+This is entirely optional — nothing in chapters 00-13 or this chapter's checklist requires
+`govc`; it's here for whoever ends up needing vCenter-level access that `kubectl`/`vcf` can't
+reach.
 
 ## RBAC: getting your team access to a namespace
 
