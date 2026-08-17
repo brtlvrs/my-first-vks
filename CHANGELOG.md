@@ -12,6 +12,8 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-17
+
 ### Added
 
 - `mise run govc:login` / `govc:logout` — optional tasks for direct `govc` access to vCenter
