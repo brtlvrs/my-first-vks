@@ -11,6 +11,7 @@ Common failure modes and what they usually mean.
 - [app pod stuck Pending or refused by admission](#app-pod-stuck-pending-or-refused-by-admission)
 - [copied an overlay folder and things target the wrong namespace](#copied-an-overlay-folder-and-things-target-the-wrong-namespace)
 - [`cluster:delete` has no interactive picker](#clusterdelete-has-no-interactive-picker)
+- [`kubectl debug node` pod won't schedule, or lingers afterward](#kubectl-debug-node-pod-wont-schedule-or-lingers-afterward)
 - [git line-ending changes on every checkout (Windows)](#git-line-ending-changes-on-every-checkout-windows)
 
 <!-- tocstop -->
@@ -80,6 +81,19 @@ will land the resource somewhere other than where your `mise` context is pointed
 `fzf` isn't installed — `mise run doctor` reports this as a `WARN`, not a `FAIL`, since it's
 optional. Either install `fzf`, or pass the cluster name directly:
 `mise run cluster:delete <name>`. See [`TODO.md`](../TODO.md).
+
+## `kubectl debug node` pod won't schedule, or lingers afterward
+
+Two separate gotchas with [chapter 10's node-shell walkthrough](10-day2-operations.md#accessing-a-nodes-shell-without-ssh):
+
+- **Refused/stuck Pending** — you ran it against an application namespace instead of
+  `kube-system`. A privileged debug pod can't schedule under the Restricted Pod Security Standard
+  that `hello-vks`-style namespaces enforce; the `-n kube-system` in the command is load-bearing,
+  not incidental.
+- **Old debug pods piling up** — `kubectl debug node` doesn't clean up after itself. If
+  `kubectl get pod -n kube-system --context <namespace>:<cluster-name>` shows several
+  `node-debugger-*` pods sitting around from past sessions, delete the ones you're done with;
+  they don't expire on their own.
 
 ## git line-ending changes on every checkout (Windows)
 

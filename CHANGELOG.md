@@ -12,6 +12,12 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+### Added
+
+- Chapter 12: a quick-diagnosis entry for `kubectl debug node` pods that won't schedule (wrong
+  namespace/PSS level) or that pile up after use, pointing at the existing walkthrough in
+  [chapter 10](docs/10-day2-operations.md#accessing-a-nodes-shell-without-ssh).
+
 ## [0.2.1] - 2026-08-17
 
 ### Fixed
