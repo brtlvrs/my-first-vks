@@ -47,9 +47,31 @@ curl -fsSL https://mise.run | sh
 winget install jdx.mise
 ```
 
-After installing, make sure mise's shim folder is on your `PATH`. Run `mise doctor` (mise's own
-built-in doctor, not this repo's `mise run doctor` yet — that comes later) — it tells you exactly
-which path to add if something's missing.
+After installing, activate mise in your shell — otherwise its shims/tools never resolve on `PATH`.
+Run `mise doctor` (mise's own built-in doctor, not this repo's `mise run doctor` yet — that comes
+later); if this step is missing it reports a `1 problem found` telling you to do exactly this:
+
+**macOS / Linux (bash):**
+
+```
+echo 'eval "$(mise activate bash)"' >> ~/.bashrc
+```
+
+**macOS / Linux (zsh):**
+
+```
+echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
+```
+
+**Windows (PowerShell):**
+
+```
+Add-Content -Path $PROFILE -Value 'mise activate pwsh | Out-String | Invoke-Expression'
+```
+
+Open a new shell afterward and re-run `mise doctor` — `activated: yes` confirms it worked. (For
+non-interactive setups such as CI, `mise doctor` suggests adding the shims directory,
+`~/.local/share/mise/shims`, to `PATH` directly instead of activating.)
 
 ## 3. configure mise's global settings
 
