@@ -12,6 +12,8 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-17
+
 ### Fixed
 
 - `govc:login`/`govc:logout` fall back to an insecure connection (`GOVC_INSECURE=true`, with a
