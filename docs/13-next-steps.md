@@ -84,9 +84,10 @@ what's gating a `v1.0.0`.
 
 1. Move the entries accumulated under `## [Unreleased]` in `CHANGELOG.md` under a new
    `## [X.Y.Z] - YYYY-MM-DD` header, choosing the bump per the rules above.
-2. `mise run release:tag` — reads that new header out of `CHANGELOG.md` and creates a local
+2. Update the "Current version" line and link at the top of [`README.md`](../README.md) to match.
+3. `mise run release:tag` — reads that new header out of `CHANGELOG.md` and creates a local
    annotated tag `vX.Y.Z`. It does not push anything.
-3. Push the tag yourself once you're ready: `git push <remote> vX.Y.Z`, once per remote.
+4. Push the tag yourself once you're ready: `git push <remote> vX.Y.Z`, once per remote.
 
 ## 12-factor apps
 

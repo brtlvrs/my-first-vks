@@ -1,5 +1,8 @@
 # my-first-vks
 
+**Current version: [`v0.2.1`](CHANGELOG.md#021---2026-08-17)** — see [`CHANGELOG.md`](CHANGELOG.md)
+for release history, and [versioning](#versioning) below for what pulling a specific tag buys you.
+
 A customer-agnostic starting point for deploying apps and managing cluster lifecycle on a
 VMware VCF 9.1 Supervisor (VKS). This repo doesn't belong to any one customer — every value
 that would normally be site-specific (endpoints, IPs, hostnames, storage policies, credentials)
