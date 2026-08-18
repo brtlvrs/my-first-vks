@@ -12,10 +12,19 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-18
+
 ### Changed
 
 - README disclaimer now explicitly names the VCF version this repo was developed and tested
   against (VCF 9.1) — an older or newer Supervisor version may behave differently.
+- Fixed a stale `v0.1.0` version reference in `TODO.md`.
+
+### Added
+
+- Three `TODO.md` items that several `docs/` chapters already claimed were tracked there (the
+  `cluster:delete` `fzf` picker, Vault-backed SSH key storage, and a Velero worked example) but
+  weren't.
 
 ## [0.3.0] - 2026-08-18
 

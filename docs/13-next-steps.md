@@ -80,14 +80,27 @@ While the major version is `0` (`v0.y.z`), per the SemVer spec itself anything m
 this repo hasn't yet been used for a real customer onboarding. See [`TODO.md`](../TODO.md) for
 what's gating a `v1.0.0`.
 
+**Branch model:** day-to-day work happens on `pre-release`, not `main`. `main` only ever advances
+via a squash-merge from `pre-release`, one per release, each immediately tagged — so `main`'s
+history is exactly the sequence of releases, nothing else. `pre-release` currently lives in
+`gitea` only (never pushed to `github`) — plan is to also push it to `github` once more than one
+person is working on this repo and a shared branch for in-progress work becomes worth the
+visibility. Until then, `github`'s `main` only ever shows tagged release commits.
+
 **Cutting a release:**
 
-1. Move the entries accumulated under `## [Unreleased]` in `CHANGELOG.md` under a new
-   `## [X.Y.Z] - YYYY-MM-DD` header, choosing the bump per the rules above.
-2. Update the "Current version" line and link at the top of [`README.md`](../README.md) to match.
-3. `mise run release:tag` — reads that new header out of `CHANGELOG.md` and creates a local
-   annotated tag `vX.Y.Z`. It does not push anything.
-4. Push the tag yourself once you're ready: `git push <remote> vX.Y.Z`, once per remote.
+1. On `pre-release`: move the entries accumulated under `## [Unreleased]` in `CHANGELOG.md` under
+   a new `## [X.Y.Z] - YYYY-MM-DD` header, choosing the bump per the rules above, and update the
+   "Current version" line and link at the top of [`README.md`](../README.md) to match. Commit.
+2. `git checkout main && git merge --squash pre-release && git commit -m "chore: release
+   vX.Y.Z"` — one commit on `main` per release, regardless of how many commits accumulated on
+   `pre-release` since the last one.
+3. `mise run release:tag` — reads the new header out of `CHANGELOG.md` and creates a local
+   annotated tag `vX.Y.Z` against that commit. It does not push anything.
+4. Push `main` and the tag to **every** remote (`git push <remote> main vX.Y.Z`, once per remote).
+   Push `pre-release` to `gitea` only — never `github`, until the point above changes.
+5. Keep committing to `pre-release` for the next round of work — squash-merging doesn't touch it,
+   no rebase/reset needed.
 
 ## 12-factor apps
 
