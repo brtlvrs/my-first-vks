@@ -18,6 +18,12 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
   namespace/PSS level) or that pile up after use, pointing at the existing walkthrough in
   [chapter 10](docs/10-day2-operations.md#accessing-a-nodes-shell-without-ssh).
 
+### Changed
+
+- Chapter 02: "generate a key" is now broken out per macOS/Linux/Windows (previously one generic
+  command), including the Windows-specific `icacls` fix for OpenSSH's "permissions are too open"
+  error.
+
 ## [0.2.1] - 2026-08-17
 
 ### Fixed

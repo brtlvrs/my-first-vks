@@ -8,11 +8,14 @@ a passphrase on every single `git push`.
 <!-- toc -->
 
 - [generate a key](#generate-a-key)
-- [use a passphrase](#use-a-passphrase)
-- [stop re-entering the passphrase every time](#stop-re-entering-the-passphrase-every-time)
   * [macOS](#macos)
   * [Linux](#linux)
   * [Windows](#windows)
+- [use a passphrase](#use-a-passphrase)
+- [stop re-entering the passphrase every time](#stop-re-entering-the-passphrase-every-time)
+  * [macOS](#macos-1)
+  * [Linux](#linux-1)
+  * [Windows](#windows-1)
 - [add the public key to your git server](#add-the-public-key-to-your-git-server)
 - [optional extra hardening](#optional-extra-hardening)
 
@@ -20,12 +23,54 @@ a passphrase on every single `git push`.
 
 ## generate a key
 
+The command itself is identical on every OS — `ed25519` is the modern default (shorter keys,
+faster, at least as strong as RSA-4096) and every platform below already has `ssh-keygen` on
+`PATH` once [chapter 01](01-prepare-your-workstation.md) is done. Accept the default file
+location it suggests (`~/.ssh/id_ed25519`) unless you have a specific reason not to. What
+differs per OS is *where that ends up* and a couple of platform-specific gotchas.
+
+### macOS
+
 ```
 ssh-keygen -t ed25519 -C "you@example.com"
 ```
 
-`ed25519` is the modern default — shorter keys, faster, at least as strong as RSA-4096. Accept
-the default file location (`~/.ssh/id_ed25519`) unless you have a specific reason not to.
+Comes with the Xcode Command Line Tools chapter 01 already has you install — nothing extra to
+set up. Lands at `~/.ssh/id_ed25519`.
+
+### Linux
+
+```
+ssh-keygen -t ed25519 -C "you@example.com"
+```
+
+Most desktop distros already have this; a minimal/server install might not. If `ssh-keygen: command
+not found`, install the client package first: `sudo apt install openssh-client` (Debian/Ubuntu) or
+`sudo dnf install openssh-clients` (Fedora/RHEL). Lands at `~/.ssh/id_ed25519`.
+
+### Windows
+
+Run it from **Git Bash** (installed in chapter 01 alongside git) so the rest of this chapter's
+commands work unmodified — PowerShell's built-in OpenSSH client works too, but Git Bash keeps
+you on the same `~/.ssh/...`-style paths used everywhere else in this cookbook:
+
+```
+ssh-keygen -t ed25519 -C "you@example.com"
+```
+
+This lands at `%USERPROFILE%\.ssh\id_ed25519` — the same location Git Bash's `~/.ssh/id_ed25519`
+resolves to, just written the Windows way for when you need it in PowerShell (e.g. the agent
+commands below). One Windows-specific gotcha to know about upfront: if OpenSSH ever refuses your
+key with an `UNPROTECTED PRIVATE KEY FILE` / "permissions ... are too open" error, it means the
+key file's NTFS permissions grant access beyond just your account (common if it was copied in
+rather than generated in place). Fix it from PowerShell:
+
+```powershell
+icacls $env:USERPROFILE\.ssh\id_ed25519 /inheritance:r
+icacls $env:USERPROFILE\.ssh\id_ed25519 /grant:r "$($env:USERNAME):F"
+```
+
+That strips inherited permissions and grants access to only your own account.
 
 ## use a passphrase
 
@@ -123,4 +168,7 @@ Gitea example. Never paste the *private* key (`id_ed25519`, no `.pub` suffix) an
   gone can't be used, forwarded, or leaked; one that's still lying around a year later can.
 
 Sources: [goteleport.com — 5 SSH Agent Best Practices](https://goteleport.com/blog/how-to-use-ssh-agent-safely/),
-[smallstep.com — SSH Agent Explained](https://smallstep.com/blog/ssh-agent-explained/).
+[smallstep.com — SSH Agent Explained](https://smallstep.com/blog/ssh-agent-explained/),
+[PowerShell/Win32-OpenSSH wiki — file permissions](https://github.com/PowerShell/Win32-OpenSSH/wiki/Security-protection-of-various-files-in-Win32-OpenSSH)
+(the `icacls` fix above is the community-standard fix for the "permissions are too open" error;
+the wiki documents the underlying rule, not that exact command).
