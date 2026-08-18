@@ -1,5 +1,14 @@
 # my-first-vks
 
+```
+__________          __  .__                        
+\______   \________/  |_|  |___  _________  ______  
+ |    |  _/\_  __ \   __\  |\  \/ /\_  __ \/  ___/ 
+ |    |   \ |  | \/|  | |  |_\   /  |  | \/\___ \ 
+ |______  / |__|   |__| |____/\_/   |__|  /____  >
+        \/                                     \/      
+```
+
 **Current version: [`v0.2.1`](CHANGELOG.md#021---2026-08-17)** — see [`CHANGELOG.md`](CHANGELOG.md)
 for release history, and [versioning](#versioning) below for what pulling a specific tag buys you.
 

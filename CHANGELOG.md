@@ -16,6 +16,7 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 - [`LICENSE`](LICENSE) (MIT), plus a `README.md` "disclaimer" section spelling out what "AS IS, no
   warranty" means in practice for a repo that drives real vSphere/VCF infrastructure.
+- An ASCII art banner ([`BANNER.txt`](BANNER.txt)) at the top of `README.md`.
 - Chapter 12: a quick-diagnosis entry for `kubectl debug node` pods that won't schedule (wrong
   namespace/PSS level) or that pile up after use, pointing at the existing walkthrough in
   [chapter 10](docs/10-day2-operations.md#accessing-a-nodes-shell-without-ssh).
