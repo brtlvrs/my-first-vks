@@ -138,6 +138,40 @@ echo ""
 echo "cloud-init still needs a few minutes to finish (package install + disk setup) before SSH is fully usable."
 '''
 
+["pvc:sync-size"]
+description = "Sync base/pvc.yaml's storage size to the bound PV's real spec.capacity - fixes 'field can not be less than status.capacity' on the next redeploy after a PVC was resized outside git (see docs/10-day2-operations.md). Review the diff before committing."
+dir = "{{cwd}}"
+run = '''
+set -euo pipefail
+: "${VCF_SUPERVISOR:?Missing VCF_SUPERVISOR env var.}"
+: "${VCF_NAMESPACE:?Missing VCF_NAMESPACE env var.}"
+BUILT="$(kustomize build .)"
+PVC_NAME=$(printf '%s' "$BUILT" | yq 'select(.kind == "PersistentVolumeClaim") | .metadata.name')
+VM_NS=$(printf '%s' "$BUILT" | yq 'select(.kind == "PersistentVolumeClaim") | .metadata.namespace')
+[ -n "$PVC_NAME" ] && [ "$PVC_NAME" != "null" ] || { echo "ERROR: no PersistentVolumeClaim found by 'kustomize build .' in this folder" >&2; exit 1; }
+CTX="${VCF_SUPERVISOR}:${VCF_NAMESPACE}"
+
+PV_NAME=$(kubectl get pvc "${PVC_NAME}" -n "${VM_NS}" --context "${CTX}" -o jsonpath='{.spec.volumeName}')
+[ -n "$PV_NAME" ] || { echo "ERROR: could not read spec.volumeName for pvc/${PVC_NAME} -n ${VM_NS}" >&2; exit 1; }
+# NOT pvc status.capacity - that field only updates once a pod-mounted node-expand completes,
+# which never happens for a VM-attached volume (see docs/10-day2-operations.md) and can stay
+# stale forever. The PV's spec.capacity is what CNS itself set once it actually grew the disk.
+CURRENT=$(kubectl get pv "${PV_NAME}" --context "${CTX}" -o jsonpath='{.spec.capacity.storage}')
+[ -n "$CURRENT" ] || { echo "ERROR: could not read spec.capacity for pv/${PV_NAME}" >&2; exit 1; }
+
+# Assumes the base+single-overlay layout every app/ folder here follows (see chapter 07) - run
+# this from an app's overlays/<namespace>/ folder, same as every other task in this file.
+PVC_FILE="../../base/pvc.yaml"
+[ -f "$PVC_FILE" ] || { echo "ERROR: ${PVC_FILE} not found - run this from an app's overlays/<namespace>/ folder" >&2; exit 1; }
+
+export CURRENT
+yq -i '(select(.kind == "PersistentVolumeClaim") | .spec.resources.requests.storage) = strenv(CURRENT)' "$PVC_FILE"
+
+echo "=== ${PVC_FILE} now requests ${CURRENT} (matching pv/${PV_NAME}'s actual spec.capacity) ==="
+echo "Review, then commit before the next redeploy:"
+git diff -- "$PVC_FILE" || true
+'''
+
 ["vm:set-password"]
 description = "Create/rotate the login-password Secret referenced by the current overlay's VirtualMachine"
 dir = "{{cwd}}"

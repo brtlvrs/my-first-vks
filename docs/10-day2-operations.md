@@ -10,6 +10,7 @@ Everyday operational tasks once a cluster and its apps are up.
 - [scaling a cluster](#scaling-a-cluster)
 - [upgrading a cluster's Kubernetes version](#upgrading-a-clusters-kubernetes-version)
 - [deleting a cluster](#deleting-a-cluster)
+- [resizing a VM Service app's data disk](#resizing-a-vm-service-apps-data-disk)
 - [accessing a node's shell without SSH](#accessing-a-nodes-shell-without-ssh)
 
 <!-- tocstop -->
@@ -127,6 +128,73 @@ mise run cluster:delete
 **Destructive.** Interactively picks a cluster (via `fzf`, if installed — see
 [`TODO.md`](../TODO.md)) or accepts a name directly (`mise run cluster:delete <name>`), then
 requires you to type the cluster's name again to confirm before anything happens.
+
+## resizing a VM Service app's data disk
+
+Growing a VM Service app's persistent data disk (`hello-vm-data` in `apps/hello-vm/`, or the
+equivalent `<name>-data` PVC on any app modeled after it) needs one extra manual step beyond a
+normal PVC resize, because these VMs aren't pods — there's no kubelet around to finish the job for
+you the way there would be for a container workload.
+
+1. **Edit the size in git, then apply.** Bump `spec.resources.requests.storage` in
+   `apps/hello-vm/base/pvc.yaml` — never `kubectl edit`/`kubectl patch` directly against the
+   cluster. If the size only ever changes live, git stays stuck at the old value, and the next
+   `mise run vm:redeploy` (or any plain `kubectl apply -k .`) tries to reconcile the PVC back down
+   to that stale, smaller value. Kubernetes rejects that outright:
+   ```
+   persistentvolumeclaims "hello-vm-data" is forbidden: field can not be less than status.capacity
+   ```
+   Then apply as usual: `kubectl apply -k .` (with the right `--context`, or via your own
+   `app:apply`-style task if you added one).
+
+2. **`kubectl describe pvc hello-vm-data` will look stuck.** It reports something like:
+   ```
+   FileSystemResizePending   True   ...   Waiting for user to (re-)start a pod to finish file system resize of volume on node.
+   ```
+   That message is generic boilerplate written for the normal pod-mounts-a-PVC model. Volume
+   expansion is actually two-phase: **controller-side** (vSphere CNS grows the backing virtual
+   disk — this part already completed, which is why `kubectl get pv` shows the new size) and
+   **node-side** (the block device gets rescanned and the filesystem grown, normally triggered by
+   kubelet when a pod remounts the volume). A VM Service VM has no kubelet mounting anything, so
+   the node-side phase never fires on its own, no matter how long you wait. **This is expected for
+   a VM Service volume, not a sign something's broken** — see step 4.
+
+3. **Do the node-side resize yourself.** Restart the VM to force it to reattach the disk at its
+   new size:
+   ```
+   mise run vm:restart
+   ```
+   If a plain restart doesn't pick up the new size, a full power-cycle reliably does (fresh boot =
+   fresh disk enumeration, no stale SCSI size cached from before):
+   ```
+   mise run vm:power-off
+   mise run vm:power-on
+   ```
+   SSH in and confirm the kernel sees the bigger disk (`lsblk`), then grow the filesystem straight
+   onto the raw block device — these images ship it unpartitioned, so there's no `growpart` step:
+   ```
+   lsblk -f /dev/sdb           # confirm the filesystem type first
+   resize2fs /dev/sdb          # ext4, the default on these images
+   # or, if it's XFS instead (takes the *mountpoint*, not the device):
+   # xfs_growfs /var/lib/hello-vm
+   df -h /var/lib/hello-vm
+   ```
+   Running the wrong one against the wrong filesystem type just errors immediately and harmlessly
+   — re-check with `lsblk -f` and use the other command.
+
+4. **The PVC will probably still show the old size — leave it.** `kubectl get pvc`/`describe pvc`
+   can keep showing the pre-resize capacity and the `FileSystemResizePending` condition
+   indefinitely, since nothing ever calls back to update it for a VM-consumed PVC (step 2). This is
+   cosmetic/stale bookkeeping, not a real problem — the actual disk and filesystem are already
+   correct once step 3 is done.
+
+If you ever end up in the state where the cluster's real PVC size has drifted ahead of what git
+says (resized live, or inherited that way), `mise run pvc:sync-size` — run from
+`overlays/<namespace>/`, defined in [`apps/mise-tasks/vm.toml`](../apps/mise-tasks/vm.toml) —
+reads the bound PV's actual `spec.capacity` and writes it back into `base/pvc.yaml` for you.
+Review the diff and commit it before the next redeploy. See
+[chapter 12](12-troubleshooting-cookbook.md#pvc-resize-stuck-at-filesystemresizepending) for the
+short version of why step 2 looks stuck.
 
 ## accessing a node's shell without SSH
 

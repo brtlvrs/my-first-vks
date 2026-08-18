@@ -12,6 +12,7 @@ Common failure modes and what they usually mean.
 - [copied an overlay folder and things target the wrong namespace](#copied-an-overlay-folder-and-things-target-the-wrong-namespace)
 - [`cluster:delete` has no interactive picker](#clusterdelete-has-no-interactive-picker)
 - [`kubectl debug node` pod won't schedule, or lingers afterward](#kubectl-debug-node-pod-wont-schedule-or-lingers-afterward)
+- [PVC resize stuck at `FileSystemResizePending`](#pvc-resize-stuck-at-filesystemresizepending)
 - [git line-ending changes on every checkout (Windows)](#git-line-ending-changes-on-every-checkout-windows)
 
 <!-- tocstop -->
@@ -94,6 +95,16 @@ Two separate gotchas with [chapter 10's node-shell walkthrough](10-day2-operatio
   `kubectl get pod -n kube-system --context <namespace>:<cluster-name>` shows several
   `node-debugger-*` pods sitting around from past sessions, delete the ones you're done with;
   they don't expire on their own.
+
+## PVC resize stuck at `FileSystemResizePending`
+
+Expected for any VM Service app's data disk (`hello-vm-data` and friends in `apps/hello-vm/`) —
+these VMs aren't pods, so there's no kubelet around to finish the node-side half of a volume
+expansion the way a normal PVC-in-a-pod resize would. The backing disk itself has already grown
+(`kubectl get pv` shows the new size); you just need to trigger the node-side resize yourself with
+a VM restart and an in-guest `resize2fs`/`xfs_growfs`. The PVC's reported size and this condition
+can then stay stale indefinitely afterward — that's cosmetic, not a sign anything's still broken.
+Full procedure: [chapter 10](10-day2-operations.md#resizing-a-vm-service-apps-data-disk).
 
 ## git line-ending changes on every checkout (Windows)
 

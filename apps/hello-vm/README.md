@@ -50,6 +50,10 @@ persists as part of that same bind mount — no separate volume needed. **Put yo
 The actual data-loss boundary is `kubectl delete pvc hello-vm-data -n <namespace>` — never run
 that unless the intent is to permanently wipe state.
 
+Need more room on `hello-vm-data` later? Resizing a VM Service app's data disk needs one extra
+manual step beyond a normal PVC resize — see
+[chapter 10](../../docs/10-day2-operations.md#resizing-a-vm-service-apps-data-disk).
+
 ## running the demo compose stack
 
 [`../compose/docker-compose.yaml`](../compose/docker-compose.yaml) isn't applied by
@@ -108,6 +112,7 @@ Defined in [`../mise-tasks/vm.toml`](../mise-tasks/vm.toml), run from
 | `vm:delete` | **Destructive.** Deletes the VM (typed-name confirmation) — the data-disk PVC survives |
 | `vm:redeploy` | First-time deploy, or delete-then-reapply if it already exists — waits for an IP |
 | `vm:set-password` | Create/rotate the login-password Secret |
+| `pvc:sync-size` | Sync `base/pvc.yaml`'s storage size to the bound PV's real size after an out-of-git resize — see [chapter 10](../../docs/10-day2-operations.md#resizing-a-vm-service-apps-data-disk) |
 
 ## CHANGE_ME placeholders
 
