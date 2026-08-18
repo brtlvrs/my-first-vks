@@ -12,6 +12,11 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+### Changed
+
+- README disclaimer now explicitly names the VCF version this repo was developed and tested
+  against (VCF 9.1) — an older or newer Supervisor version may behave differently.
+
 ## [0.3.0] - 2026-08-18
 
 ### Added

@@ -88,7 +88,10 @@ in practice for this specific repo.
 deleting VKS clusters, powering VMs on and off, resizing data disks, rotating credentials — and
 several mise tasks are destructive by design (`cluster:delete`, `vm:delete`, and anything under
 `*:apply`/`*:redeploy` that reconciles live state to match git). Nothing here has been validated
-against *your* environment. Before running anything against infrastructure that matters:
+against *your* environment, and it was developed and tested specifically against **VMware VCF
+9.1** — an older or newer VCF/Supervisor version may behave differently (API fields, CLI flags,
+default storage/network providers) without warning. Before running anything against infrastructure
+that matters:
 
 - Read the mise task's `description` and the relevant [`docs/`](docs/README.md) chapter before
   running it — a task name alone doesn't convey its blast radius.
