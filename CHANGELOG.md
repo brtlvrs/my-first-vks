@@ -12,8 +12,16 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-18
+
 ### Added
 
+- `pvc:sync-size` mise task (in [`apps/mise-tasks/vm.toml`](apps/mise-tasks/vm.toml)) for
+  `apps/hello-vm`-style VM Service apps: syncs `base/pvc.yaml`'s storage size to the bound PV's
+  real `spec.capacity` after an out-of-git resize. Plus the full data-disk resize walkthrough in
+  [chapter 10](docs/10-day2-operations.md#resizing-a-vm-service-apps-data-disk) and a cross-linked
+  entry in [chapter 12](docs/12-troubleshooting-cookbook.md#pvc-resize-stuck-at-filesystemresizepending)
+  for the `FileSystemResizePending` symptom.
 - [`LICENSE`](LICENSE) (MIT), plus a `README.md` "disclaimer" section spelling out what "AS IS, no
   warranty" means in practice for a repo that drives real vSphere/VCF infrastructure.
 - An ASCII art banner at the top of `README.md`.
