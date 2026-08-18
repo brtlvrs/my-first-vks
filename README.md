@@ -20,6 +20,8 @@ examples you can literally copy and rename rather than build from scratch.
 - [quick start](#quick-start)
 - [why two different folder shapes](#why-two-different-folder-shapes)
 - [versioning](#versioning)
+- [license](#license)
+- [disclaimer](#disclaimer)
 
 <!-- tocstop -->
 
@@ -65,3 +67,26 @@ pull a specific tag rather than tracking `main`, so a later update to your fork 
 choice, not something that lands underneath you. See [`CHANGELOG.md`](CHANGELOG.md) for what
 changed at each tag, and [`docs/13-next-steps.md#versioning-this-repo`](docs/13-next-steps.md#versioning-this-repo)
 for what a major/minor/patch bump means here.
+
+## license
+
+[MIT](LICENSE) — permissive, no warranty. See [disclaimer](#disclaimer) below for what that means
+in practice for this specific repo.
+
+## disclaimer
+
+**Use this repo at your own risk.** It drives real vSphere/VCF infrastructure — provisioning and
+deleting VKS clusters, powering VMs on and off, resizing data disks, rotating credentials — and
+several mise tasks are destructive by design (`cluster:delete`, `vm:delete`, and anything under
+`*:apply`/`*:redeploy` that reconciles live state to match git). Nothing here has been validated
+against *your* environment. Before running anything against infrastructure that matters:
+
+- Read the mise task's `description` and the relevant [`docs/`](docs/README.md) chapter before
+  running it — a task name alone doesn't convey its blast radius.
+- Try it against a disposable namespace/cluster first, not production.
+- Review every `CHANGE_ME_*` placeholder — a stale or wrong value (namespace, storage class, CA
+  certificate) can silently target the wrong environment instead of failing loudly.
+
+The [MIT license](LICENSE) already makes this formal: the software is provided "AS IS", without
+warranty of any kind, and the author/contributors are not liable for any damages arising from its
+use.
