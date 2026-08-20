@@ -12,6 +12,18 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-20
+
+### Added
+
+- Chapter 01: a table explaining what each mise-pinned CLI (`kubectl`, `kubectx`, `kubens`, `k9s`,
+  `jq`, `yq`, `kustomize`, `fzf`) is actually for, and a note that `kubectx`/`kubens` auto-detect
+  `fzf` on `PATH` for interactive picking with no extra config.
+- Chapter 01: an optional step suggesting the `starship` shell prompt for surfacing the active
+  kube context, including the catch that starship's `kubernetes` module is disabled by default.
+- Chapter 15: external doc links for `kubectl`, `kubectx`/`kubens`, `k9s`, `jq`, and `yq` under
+  "tools this repo uses directly" (`fzf`/`kustomize`/`mise` were already linked).
+
 ## [0.3.1] - 2026-08-18
 
 ### Changed

@@ -12,6 +12,7 @@ This chapter gets a blank workstation (Windows, macOS, or Linux) to the point wh
 - [5. install the vcf CLI (manual step)](#5-install-the-vcf-cli-manual-step)
 - [6. editor](#6-editor)
 - [7. verify](#7-verify)
+- [8. optional: a shell prompt that shows your kube context](#8-optional-a-shell-prompt-that-shows-your-kube-context)
 
 <!-- tocstop -->
 
@@ -97,8 +98,20 @@ variables with no shell errors above it.
 
 ## 4. install the pinned CLIs
 
-The root [`mise.toml`](../mise.toml) `[tools]` block pins the versions this repo expects
-(`kubectl`, `kubectx`, `kubens`, `k9s`, `jq`, `yq`, `kustomize`). From the repo root, just run:
+The root [`mise.toml`](../mise.toml) `[tools]` block pins the versions this repo expects:
+
+| tool | what it's for |
+| --- | --- |
+| `kubectl` | the Kubernetes CLI — everything in `apps/` and `platform/` eventually goes through it |
+| `kubectx` | switch between kubeconfig contexts (e.g. the Supervisor vs. a workload cluster) |
+| `kubens` | switch the current namespace within a context |
+| `k9s` | terminal UI for browsing/inspecting a cluster interactively |
+| `jq` | JSON processor, used by several tasks that parse `kubectl -o json` output |
+| `yq` | the YAML equivalent of `jq`, used for reading/editing manifests from tasks |
+| `kustomize` | the `base`/`overlay`/`component` engine behind every manifest in `apps/` and `platform/` |
+| `fzf` | fuzzy picker — powers the `cluster:delete` interactive picker (see [chapter 10](10-day2-operations.md#deleting-a-cluster)), and `kubectx`/`kubens` pick it up automatically for interactive context/namespace switching once it's on `PATH` |
+
+From the repo root, just run:
 
 ```
 mise install
@@ -106,7 +119,8 @@ mise install
 
 mise reads `[tools]` and installs everything listed, at the pinned versions. You don't need to
 install these globally or manage them by hand — mise makes them available whenever your shell is
-inside this repo.
+inside this repo. For what each tool actually is and links to its own docs, see
+[chapter 15](15-further-reading.md#tools-this-repo-uses-directly).
 
 ## 5. install the vcf CLI (manual step)
 
@@ -139,3 +153,41 @@ This checks every CLI above and reports `OK`/`WARN`/`FAIL` per tool (see
 [`mise-tasks/doctor.toml`](../mise-tasks/doctor.toml)). Fix anything reported as `FAIL` before
 moving on — `WARN` (e.g. `vcf` or `fzf` not yet installed) is fine to defer if you're not ready
 for that step yet.
+
+## 8. optional: a shell prompt that shows your kube context
+
+Not checked by `mise run doctor` — purely a personal-comfort suggestion. When you're jumping
+between the Supervisor and workload-cluster contexts with `kubectx`/`kubens` (step 4), it's easy
+to lose track of which one is currently active. [starship](https://starship.rs/) is a cross-shell
+prompt that can show it for you.
+
+**macOS/Linux:**
+
+```
+curl -sS https://starship.rs/install.sh | sh
+```
+
+(or `brew install starship` on macOS)
+
+**Windows:** `winget install --id Starship.Starship`
+
+Then activate it, the same way you activated mise in step 2:
+
+**bash:** `echo 'eval "$(starship init bash)"' >> ~/.bashrc`
+
+**zsh:** `echo 'eval "$(starship init zsh)"' >> ~/.zshrc`
+
+**PowerShell:** `Add-Content -Path $PROFILE -Value 'Invoke-Expression (&starship init powershell)'`
+
+Open a new shell to pick it up. One catch: starship's `kubernetes` module — the piece that prints
+the current context/namespace — is **disabled by default**. Enable it in starship's own config
+(`~/.config/starship.toml` on macOS/Linux, `%APPDATA%\starship\config.toml` on Windows):
+
+```toml
+[kubernetes]
+disabled = false
+format = '[$symbol$context( \($namespace\))]($style) '
+```
+
+See [starship.rs/config/#kubernetes](https://starship.rs/config/#kubernetes) for the full set of
+options (aliasing long context names, styling, etc.).

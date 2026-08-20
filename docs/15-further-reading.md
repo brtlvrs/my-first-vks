@@ -63,7 +63,21 @@ to the wider field:
 
 - [mise.jdx.dev](https://mise.jdx.dev/) — CLI version pinning and task runner, the single entry
   point for everything in this repo (see [chapter 01](01-prepare-your-workstation.md)).
+- [kubernetes.io/docs/reference/kubectl](https://kubernetes.io/docs/reference/kubectl/) — the
+  Kubernetes CLI itself.
+- [github.com/ahmetb/kubectx](https://github.com/ahmetb/kubectx) — `kubectx`/`kubens`, for
+  switching contexts and namespaces. Both pick up `fzf` (below) automatically for an interactive
+  fuzzy picker if it's on `PATH` — no flag or config needed (set `KUBECTX_IGNORE_FZF=1` to opt
+  back out).
+- [k9scli.io](https://k9scli.io/) — terminal UI for browsing a cluster.
+- [jqlang.org](https://jqlang.org/) — the JSON processor several tasks pipe `kubectl -o json`
+  through.
+- [github.com/mikefarah/yq](https://github.com/mikefarah/yq) — the YAML equivalent of `jq`; this
+  is the Go `mikefarah/yq` mise installs, not the Python `kislyuk/yq` wrapper of the same name.
 - [kustomize.io](https://kustomize.io/) — the `base`/`overlay`/`component` pattern every manifest
   in `apps/` and `platform/` is built on (see [chapter 07](07-repo-structure-and-conventions.md)).
+- [github.com/junegunn/fzf](https://github.com/junegunn/fzf) — the fuzzy picker behind
+  `cluster:delete` (see [chapter 10](10-day2-operations.md#deleting-a-cluster)) and the `kubectx`/
+  `kubens` integration above.
 - [marp.app](https://marp.app/) — the slide-deck format behind
   [`docs/presentation/slides.md`](presentation/slides.md).
