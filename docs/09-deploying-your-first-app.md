@@ -10,6 +10,7 @@ full task reference.
 - [3. authenticate](#3-authenticate)
 - [4. render, then apply](#4-render-then-apply)
 - [5. verify](#5-verify)
+- [6. see it in Headlamp](#6-see-it-in-headlamp)
 
 <!-- tocstop -->
 
@@ -78,3 +79,27 @@ page.
 To remove it again: `mise run app:delete` from the same folder. To learn how to check on it going
 forward (health, node status, scaling), continue to
 [chapter 10](10-day2-operations.md).
+
+## 6. see it in Headlamp
+
+Deploying [Headlamp](https://headlamp.dev/) alongside your app is a standard step here, not an
+optional extra — the point is to *see* the Deployment/Pods/Service you just created in step 4-5,
+instead of only reading `kubectl get` output.
+
+```
+cd apps/headlamp/overlays/example-namespace
+mise run app:render
+mise run app:apply
+```
+
+Then:
+
+```
+kubectl create token headlamp -n headlamp --context <your-context>
+kubectl port-forward -n headlamp svc/headlamp 4466:80 --context <your-context>
+```
+
+Open <http://localhost:4466>, paste in the token, and find the `hello-vks` Deployment/Pods/Service
+from steps 1-5 in the UI. See [`apps/headlamp/README.md`](../apps/headlamp/README.md) for why this
+is a `kubectl port-forward` + `ServiceAccount` token rather than a `LoadBalancer`, and why it's
+bound to the read-only `view` role rather than `cluster-admin`.

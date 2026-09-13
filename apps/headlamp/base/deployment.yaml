@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headlamp
+  namespace: headlamp
+  labels:
+    app: headlamp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: headlamp
+  template:
+    metadata:
+      labels:
+        app: headlamp
+    spec:
+      serviceAccountName: headlamp
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: headlamp
+          # CHANGE_ME (maybe) — pin to whatever's current at
+          # https://github.com/headlamp-k8s/headlamp/releases; never track :latest.
+          image: ghcr.io/headlamp-k8s/headlamp:v0.44.0
+          args:
+            - "-in-cluster"
+          ports:
+            - containerPort: 4466
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - "ALL"
+            seccompProfile:
+              type: RuntimeDefault
+          # Headlamp writes its plugin/user-plugin config under $HOME/.config and a scratch
+          # static-file dir under /tmp — both need somewhere writable under a read-only root fs.
+          # See https://github.com/kubernetes-sigs/headlamp/issues/4830.
+          volumeMounts:
+            - name: home-config
+              mountPath: /home/headlamp/.config
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: home-config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

@@ -9,7 +9,7 @@ __________          __  .__
         \/                                     \/      
 ```
 
-**Current version: [`v0.3.2`](CHANGELOG.md#032---2026-08-20)** — see [`CHANGELOG.md`](CHANGELOG.md)
+**Current version: [`v0.4.0`](CHANGELOG.md#040---2026-09-13)** — see [`CHANGELOG.md`](CHANGELOG.md)
 for release history, and [versioning](#versioning) below for what pulling a specific tag buys you.
 
 A customer-agnostic starting point for deploying apps and managing cluster lifecycle on a

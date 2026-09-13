@@ -40,8 +40,10 @@ apps/
     whereamI.toml                 # wai — decode the current kube-context
 ```
 
-Four fully worked examples live here, each demonstrating a different way to run something on
-the Supervisor — copy whichever matches what you're building (see the table below).
+Five fully worked examples live here. `headlamp/` is a standard step every namespace setup
+includes (see [chapter 09](../docs/09-deploying-your-first-app.md#6-see-it-in-headlamp)) — the
+rest each demonstrate a different way to run something on the Supervisor, copy whichever matches
+what you're building (see the table below).
 
 ## which app is which
 
@@ -52,6 +54,7 @@ the Supervisor — copy whichever matches what you're building (see the table be
 | `hello-vm/` | **VM Service** (`VirtualMachine` CR) | Supervisor namespace directly | No | Persistent data disk, cloud-init bootstrap, docker-compose demo — see [below](#vm-service-and-vsphere-pods) |
 | `it-tools/` (`overlays/example-namespace-vks/`) | Container | VKS guest cluster | Yes (via a component) | Baseline PSS, root + `NET_BIND_SERVICE` only — see [`it-tools/README.md`](it-tools/README.md) |
 | `it-tools/` (`overlays/example-namespace-vpod/`) | Container, **vSphere Pod** | Supervisor namespace directly | No | Same image and security posture as the VKS variant |
+| `headlamp/` | Container | VKS guest cluster **or** Supervisor namespace directly | Yes | Restricted PSS, non-root, read-only `view` RBAC — see [`headlamp/README.md`](headlamp/README.md) |
 
 "Runs on: Supervisor namespace directly" means the app's Kubernetes namespace *is* the vSphere
 Namespace itself — see [VM Service and vSphere Pods](#vm-service-and-vsphere-pods) below for why

@@ -12,6 +12,18 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-13
+
+### Added
+
+- `apps/headlamp/`: a [Headlamp](https://headlamp.dev/) dashboard for the guest VKS cluster.
+  Unlike the other worked examples here, this is a standard step in chapter 09, not an optional
+  pick — see [`apps/headlamp/README.md`](apps/headlamp/README.md). Bound to the built-in
+  read-only `view` ClusterRole rather than `cluster-admin`, reached via `kubectl port-forward` +
+  a `ServiceAccount` token rather than a `LoadBalancer`. (A Supervisor-namespace-level instance
+  was considered but dropped — tenants generally can't self-service `Role`/`RoleBinding` objects
+  inside a Supervisor Namespace on real VCF, so that design didn't hold up.)
+
 ## [0.3.2] - 2026-08-20
 
 ### Added

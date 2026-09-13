@@ -1,0 +1,6 @@
+[env]
+# The vSphere Namespace / workload-cluster context this overlay targets. Rename this folder
+# (and this value) to match the real namespace you're deploying into, e.g. "intern" or "prod".
+# If you're deploying onto a specific VKS cluster rather than a Supervisor namespace directly,
+# also set VCF_CLUSTER here (see platform/example-namespace/vks-cluster/mise.toml for the pattern).
+VCF_NAMESPACE = "example-namespace"

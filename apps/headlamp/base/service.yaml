@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: headlamp
+  namespace: headlamp
+spec:
+  # ClusterIP on purpose, not LoadBalancer — Headlamp can view (and, if RBAC is loosened, edit)
+  # cluster objects, so it's reached via `kubectl port-forward`, never exposed on the network by
+  # default. See docs/09-deploying-your-first-app.md.
+  type: ClusterIP
+  selector:
+    app: headlamp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 4466
