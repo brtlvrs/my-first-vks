@@ -7,6 +7,7 @@ required reading, and this repo doesn't depend on any of it. Where to go from he
 
 - [VCF / vSphere / NSX / VKS official docs](#vcf--vsphere--nsx--vks-official-docs)
 - [broader DevOps / Linux / Kubernetes fundamentals](#broader-devops--linux--kubernetes-fundamentals)
+- [platform as a product](#platform-as-a-product)
 - [software design philosophy](#software-design-philosophy)
 - [GitOps](#gitops)
 - [tools this repo uses directly](#tools-this-repo-uses-directly)
@@ -34,6 +35,20 @@ to the wider field:
 - [kubernetes.io/docs](https://kubernetes.io/docs/home/) — the Kubernetes project's own docs;
   worth reading directly rather than only ever meeting Kubernetes concepts secondhand through a
   VKS-specific lens.
+
+## platform as a product
+
+The broader "run your internal platform team like a product team, with the rest of engineering as
+your customers" mindset — related to, but a level up from, the narrower repo-splitting/versioning
+pattern [chapter 13](13-next-steps.md#platform-as-a-product) happens to give the same name:
+
+- [VMware — "Platform as a Product" whitepaper](https://www.vmware.com/docs/platform-as-a-product-wp)
+- [Tanzu podcast episode on platform as a product](https://youtu.be/g8n1hYFO1OE)
+- [cloudnativeplatforms.com](https://cloudnativeplatforms.com/) — a vendor-neutral resource site
+  for the platform engineering / Internal Developer Platform practice.
+- [cloudnativeplatforms.com/resources/glossary](https://cloudnativeplatforms.com/resources/glossary/)
+  — its glossary of platform-engineering terminology, useful if you're new to the space's jargon
+  (IDP, golden path, paved road, and so on).
 
 ## software design philosophy
 

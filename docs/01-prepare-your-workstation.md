@@ -159,7 +159,9 @@ for that step yet.
 Not checked by `mise run doctor` — purely a personal-comfort suggestion. When you're jumping
 between the Supervisor and workload-cluster contexts with `kubectx`/`kubens` (step 4), it's easy
 to lose track of which one is currently active. [starship](https://starship.rs/) is a cross-shell
-prompt that can show it for you.
+prompt that can show it for you, and this repo ships a ready-to-use config at
+[`starship.toml`](../starship.toml) — you only need to install the binary and activate it in your
+shell; the kubernetes segment is already enabled.
 
 **macOS/Linux:**
 
@@ -179,15 +181,19 @@ Then activate it, the same way you activated mise in step 2:
 
 **PowerShell:** `Add-Content -Path $PROFILE -Value 'Invoke-Expression (&starship init powershell)'`
 
-Open a new shell to pick it up. One catch: starship's `kubernetes` module — the piece that prints
-the current context/namespace — is **disabled by default**. Enable it in starship's own config
-(`~/.config/starship.toml` on macOS/Linux, `%APPDATA%\starship\config.toml` on Windows):
+Open a new shell to pick it up. Unlike most starship setups you don't need to hand-edit
+`~/.config/starship.toml`: the root [`mise.toml`](../mise.toml) `[env]` block sets
+`STARSHIP_CONFIG` to point at this repo's `starship.toml` whenever mise is activated inside it (see
+["how mise `[env]` cascades"](07-repo-structure-and-conventions.md#how-mise-env-cascades)), so it
+applies automatically and leaves your own global starship config, if you have one, untouched
+outside this repo.
 
-```toml
-[kubernetes]
-disabled = false
-format = '[$symbol$context( \($namespace\))]($style) '
-```
-
-See [starship.rs/config/#kubernetes](https://starship.rs/config/#kubernetes) for the full set of
-options (aliasing long context names, styling, etc.).
+Besides the kube context (☸ symbol, purple, shown unconditionally since every folder in this repo
+is k8s-related), the shipped config's prompt also shows git branch/status, command duration and
+status, a docker context segment (for `apps/hello-vm/compose/docker-compose.yaml`), and the time.
+It renders a few icons from the [Nerd Font](https://www.nerdfonts.com/) glyph set (git branch,
+docker, background jobs, directory substitutions) — without one installed in your terminal, those
+render as blank boxes; the ☸ and ✓/✗ symbols are plain Unicode and work regardless. See
+[starship.rs/config](https://starship.rs/config/) for how to customize it further — e.g. switch
+the `palette` from `nord` to `onedark` (also defined in the file), or tweak `[kubernetes].format`
+to alias long context names.

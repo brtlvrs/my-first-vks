@@ -1,6 +1,7 @@
 ["release:tag"]
 description = "Create an annotated git tag from the latest released entry in CHANGELOG.md. Does not push it."
 run = '''
+#!/usr/bin/env bash
 set -euo pipefail
 
 if [ -n "$(git status --porcelain)" ]; then

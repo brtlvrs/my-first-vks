@@ -12,6 +12,25 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-13
+
+### Added
+
+- [`starship.toml`](starship.toml): a ready-to-use [starship](https://starship.rs/) prompt config,
+  wired up via `STARSHIP_CONFIG` in the root `mise.toml` so it applies automatically inside this
+  repo without touching your global starship config. Shows the active kube context/namespace
+  unconditionally (this repo is entirely k8s-focused), plus git branch/status, command
+  duration/status, a docker context segment, and time. See chapter 01 step 8.
+- Chapter 15: a "platform as a product" section — external resources on the broader
+  product-mindset-for-platform-teams idea, distinct from chapter 13's narrower repo-splitting
+  pattern of the same name.
+
+### Fixed
+
+- `mise run release:tag` failed with `set: Illegal option -o pipefail` — its script had no
+  `#!/usr/bin/env bash` shebang, so mise ran it under `sh` (which doesn't support
+  `set -o pipefail`) instead of `bash`, unlike every other multi-line task script in this repo.
+
 ## [0.4.0] - 2026-09-13
 
 ### Added

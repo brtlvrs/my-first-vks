@@ -8,6 +8,9 @@ GOVC_URL = "CHANGE_ME_GOVC_URL"               # vCenter Server's own endpoint (i
                                                # from VCF_ENDPOINT, the Supervisor API. Only used by the
                                                # optional govc:login/govc:logout tasks -- see
                                                # docs/14-infrastructure-prerequisites.md.
+STARSHIP_CONFIG = "{{config_root}}/starship.toml" # points an activated starship prompt (see
+                                               # docs/01-prepare-your-workstation.md step 8) at this
+                                               # repo's own config instead of ~/.config/starship.toml.
 
 [tools]
 kubectl = "1.36.2"
