@@ -12,6 +12,17 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-14
+
+### Added
+
+- [`starship-no-nerd-font.toml`](starship-no-nerd-font.toml): a fallback prompt config for
+  terminals without a [Nerd Font](https://www.nerdfonts.com/) installed. Same layout as
+  `starship.toml`, but every Nerd Font glyph (git branch, docker, background jobs, directory
+  substitutions) is swapped for a plain-Unicode or emoji equivalent. Chapter 01 step 8 now also
+  documents the `git_status` symbol legend and the glyph-to-fallback mapping, and shows how to
+  point `STARSHIP_CONFIG` at it via `.mise.local.toml`.
+
 ## [0.5.0] - 2026-09-13
 
 ### Added

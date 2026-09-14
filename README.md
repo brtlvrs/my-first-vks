@@ -9,15 +9,15 @@ __________          __  .__
         \/                                     \/      
 ```
 
-**Current version: [`v0.5.0`](CHANGELOG.md#050---2026-09-13)** — see [`CHANGELOG.md`](CHANGELOG.md)
+**Current version: [`v0.6.0`](CHANGELOG.md#060---2026-09-14)** — see [`CHANGELOG.md`](CHANGELOG.md)
 for release history, and [versioning](#versioning) below for what pulling a specific tag buys you.
 
-**tl;dr, what's new in `v0.5.0`:** an optional [starship](https://starship.rs/) prompt
-(`starship.toml`, wired up via `mise.toml` so it applies automatically inside this repo — see
-[chapter 01 step 8](docs/01-prepare-your-workstation.md#8-optional-a-shell-prompt-that-shows-your-kube-context))
-that shows your active kube context/namespace alongside git and command status, plus a new
-["platform as a product"](docs/15-further-reading.md#platform-as-a-product) further-reading
-section. Full details in [`CHANGELOG.md`](CHANGELOG.md#050---2026-09-13).
+**tl;dr, what's new in `v0.6.0`:** a fallback
+[`starship-no-nerd-font.toml`](starship-no-nerd-font.toml) prompt config for terminals without a
+[Nerd Font](https://www.nerdfonts.com/) installed — see
+[chapter 01 step 8](docs/01-prepare-your-workstation.md#8-optional-a-shell-prompt-that-shows-your-kube-context)
+for the glyph-to-fallback mapping and how to switch to it. Full details in
+[`CHANGELOG.md`](CHANGELOG.md#060---2026-09-14).
 
 A customer-agnostic starting point for deploying apps and managing cluster lifecycle on a
 VMware VCF 9.1 Supervisor (VKS). This repo doesn't belong to any one customer — every value

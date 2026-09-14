@@ -191,9 +191,57 @@ outside this repo.
 Besides the kube context (☸ symbol, purple, shown unconditionally since every folder in this repo
 is k8s-related), the shipped config's prompt also shows git branch/status, command duration and
 status, a docker context segment (for `apps/hello-vm/compose/docker-compose.yaml`), and the time.
-It renders a few icons from the [Nerd Font](https://www.nerdfonts.com/) glyph set (git branch,
-docker, background jobs, directory substitutions) — without one installed in your terminal, those
-render as blank boxes; the ☸ and ✓/✗ symbols are plain Unicode and work regardless. See
-[starship.rs/config](https://starship.rs/config/) for how to customize it further — e.g. switch
-the `palette` from `nord` to `onedark` (also defined in the file), or tweak `[kubernetes].format`
-to alias long context names.
+
+The git status segment (`[git_status]` in the config) marks up the branch name with one letter or
+symbol per condition — all plain Unicode/ASCII, no special font required:
+
+| Symbol | Meaning |
+| --- | --- |
+| `=N` | `N` conflicted files |
+| `⇡N` | `N` commits ahead of upstream |
+| `⇣N` | `N` commits behind upstream |
+| `⇕⇡N⇣M` | diverged: `N` ahead, `M` behind |
+| `?N` | `N` untracked files |
+| `$N` | `N` stashes |
+| `!N` | `N` modified files |
+| `+N` | `N` staged files |
+| `»N` | `N` renamed files |
+| `✘N` | `N` deleted files |
+
+It also renders a few icons from the [Nerd Font](https://www.nerdfonts.com/) glyph set (git
+branch, docker, background jobs, directory substitutions) — without one installed in your
+terminal, those render as blank boxes; the ☸ and ✓/✗ symbols used elsewhere in the prompt are
+plain Unicode and work regardless.
+
+Don't want to install a patched Nerd Font? Use
+[`starship-no-nerd-font.toml`](../starship-no-nerd-font.toml) instead — same config, with every
+Nerd Font glyph swapped for a plain-Unicode or emoji equivalent that renders correctly in any
+terminal font:
+
+| Segment | Nerd Font glyph | Fallback |
+| --- | --- | --- |
+| git branch | U+F418 | 🌿 |
+| docker context | U+F308 | 🐳 |
+| background jobs | U+F013 | ⚙ |
+| ssh (in hostname) | U+F1E6 | 🔌 |
+| `Documents` substitution | U+F0219 | 📄 |
+| `Downloads` substitution | U+F019 | ⬇ |
+| `Music` substitution | U+F001 | ♪ |
+| `Pictures` substitution | U+F03E | 🖼 |
+
+Point `STARSHIP_CONFIG` at it instead by creating a `.mise.local.toml` next to the root
+`mise.toml` (already gitignored — see
+["set your endpoint and Supervisor name"](06-connecting-to-supervisor.md#set-your-endpoint-and-supervisor-name)
+for the same pattern):
+
+```toml
+[env]
+STARSHIP_CONFIG = "{{config_root}}/starship-no-nerd-font.toml"
+```
+
+mise merges this over the committed `mise.toml`, so it overrides just for you and the committed
+file keeps pointing at `starship.toml` for everyone else.
+
+See [starship.rs/config](https://starship.rs/config/) for how to customize either file further —
+e.g. switch the `palette` from `nord` to `onedark` (also defined in the file), or tweak
+`[kubernetes].format` to alias long context names.
