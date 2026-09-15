@@ -12,6 +12,15 @@ yet been used for a real customer onboarding, and `TODO.md` still has open desig
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-15
+
+### Changed
+
+- [`starship-no-nerd-font.toml`](starship-no-nerd-font.toml): swapped its emoji fallback symbols
+  for plain 7-bit-ASCII labels (`git:`, `docker:`, `&`, `ssh:`, `Docs`/`DL`/`Music`/`Pics`) — emoji
+  still need a color-emoji font and can throw off terminal column widths, so they weren't actually
+  a safe "works everywhere" fallback. Chapter 01's glyph-to-fallback table updated to match.
+
 ## [0.6.0] - 2026-09-14
 
 ### Added

@@ -9,15 +9,15 @@ __________          __  .__
         \/                                     \/      
 ```
 
-**Current version: [`v0.6.0`](CHANGELOG.md#060---2026-09-14)** — see [`CHANGELOG.md`](CHANGELOG.md)
+**Current version: [`v0.6.1`](CHANGELOG.md#061---2026-09-15)** — see [`CHANGELOG.md`](CHANGELOG.md)
 for release history, and [versioning](#versioning) below for what pulling a specific tag buys you.
 
-**tl;dr, what's new in `v0.6.0`:** a fallback
-[`starship-no-nerd-font.toml`](starship-no-nerd-font.toml) prompt config for terminals without a
-[Nerd Font](https://www.nerdfonts.com/) installed — see
+**tl;dr, what's new in `v0.6.1`:**
+[`starship-no-nerd-font.toml`](starship-no-nerd-font.toml)'s fallback symbols are now plain
+7-bit-ASCII labels instead of emoji, which need a color-emoji font of their own — see
 [chapter 01 step 8](docs/01-prepare-your-workstation.md#8-optional-a-shell-prompt-that-shows-your-kube-context)
-for the glyph-to-fallback mapping and how to switch to it. Full details in
-[`CHANGELOG.md`](CHANGELOG.md#060---2026-09-14).
+for the updated glyph-to-fallback mapping. Full details in
+[`CHANGELOG.md`](CHANGELOG.md#061---2026-09-15).
 
 A customer-agnostic starting point for deploying apps and managing cluster lifecycle on a
 VMware VCF 9.1 Supervisor (VKS). This repo doesn't belong to any one customer — every value

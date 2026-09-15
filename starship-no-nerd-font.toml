@@ -1,5 +1,5 @@
-# Same prompt as starship.toml, but with every Nerd Font glyph swapped for a plain-Unicode
-# (or emoji) equivalent so it renders correctly without a patched font installed. See
+# Same prompt as starship.toml, but with every Nerd Font glyph swapped for a plain 7-bit-ASCII
+# label so it renders correctly with no special font (not even a color-emoji font) installed. See
 # docs/01-prepare-your-workstation.md step 8 for how to point STARSHIP_CONFIG at this file
 # instead. The ☸ and ✓/✗ symbols were already plain Unicode, so they're unchanged from
 # starship.toml.
@@ -40,7 +40,7 @@ format = '[$duration]($style) '
 
 [git_branch]
 style = 'fg:green'
-symbol = '🌿 '
+symbol = 'git:'
 format = '[$symbol$branch(:$remote_branch) ]($style)'
 
 [git_status]
@@ -67,14 +67,14 @@ format = '[$symbol$context( \($namespace\))]($style) '
 style = 'fg:purple'
 
 [docker_context]
-symbol = '🐳 '
+symbol = 'docker:'
 style = 'fg:#06969A'
 format = '[$symbol]($style) $path'
 detect_files = ['docker-compose.yml', 'docker-compose.yaml', 'Dockerfile']
 detect_extensions = ['Dockerfile']
 
 [jobs]
-symbol = '⚙ '
+symbol = '& '
 style = 'red'
 number_threshold = 1
 format = '[$symbol]($style)'
@@ -96,7 +96,7 @@ disabled = false
 show_always = true
 
 [hostname]
-ssh_symbol = '🔌 '
+ssh_symbol = ' ssh: '
 format = '[$ssh_symbol$hostname]($style) '
 
 [directory]
@@ -107,10 +107,10 @@ truncation_symbol = '…/'
 truncate_to_repo = false
 
 [directory.substitutions]
-'Documents' = '📄'
-'Downloads' = '⬇'
-'Music' = '♪'
-'Pictures' = '🖼'
+'Documents' = 'Docs'
+'Downloads' = 'DL'
+'Music' = 'Music'
+'Pictures' = 'Pics'
 
 [palettes.nord]
 dark_blue = '#5E81AC'

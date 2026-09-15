@@ -215,19 +215,19 @@ plain Unicode and work regardless.
 
 Don't want to install a patched Nerd Font? Use
 [`starship-no-nerd-font.toml`](../starship-no-nerd-font.toml) instead — same config, with every
-Nerd Font glyph swapped for a plain-Unicode or emoji equivalent that renders correctly in any
-terminal font:
+Nerd Font glyph swapped for a plain 7-bit-ASCII label (no emoji either, since those need a
+color-emoji font and can throw off terminal column widths) that renders correctly anywhere:
 
 | Segment | Nerd Font glyph | Fallback |
 | --- | --- | --- |
-| git branch | U+F418 | 🌿 |
-| docker context | U+F308 | 🐳 |
-| background jobs | U+F013 | ⚙ |
-| ssh (in hostname) | U+F1E6 | 🔌 |
-| `Documents` substitution | U+F0219 | 📄 |
-| `Downloads` substitution | U+F019 | ⬇ |
-| `Music` substitution | U+F001 | ♪ |
-| `Pictures` substitution | U+F03E | 🖼 |
+| git branch | U+F418 | `git:` |
+| docker context | U+F308 | `docker:` |
+| background jobs | U+F013 | `&` |
+| ssh (in hostname) | U+F1E6 | `ssh:` |
+| `Documents` substitution | U+F0219 | `Docs` |
+| `Downloads` substitution | U+F019 | `DL` |
+| `Music` substitution | U+F001 | `Music` (unchanged — already short) |
+| `Pictures` substitution | U+F03E | `Pics` |
 
 Point `STARSHIP_CONFIG` at it instead by creating a `.mise.local.toml` next to the root
 `mise.toml` (already gitignored — see
